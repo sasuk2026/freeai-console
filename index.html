@@ -283,42 +283,48 @@ function dropModel(id){
   toast('已废除并从调用列表移除：'+id);
 }
 async function callModel(model){
-  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),30000);
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),40000);
   try{
     const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(CUR||genKey())},
       body:JSON.stringify({model,messages:[{role:'user',content:'hi'}],max_tokens:16,stream:false})});
     clearTimeout(to);
-    if(!r.ok)return false;
+    if(r.status===429) return 'cooldown';   // 限流冷却：不废除，稍等自动恢复
+    if(!r.ok) return 'dead';                // 真失效
     const d=await r.json();
     const c=d&&d.choices&&d.choices[0]&&(d.choices[0].message||{}).content;
-    return !!(c&&String(c).trim());   // 必须真有回话内容
-  }catch(e){clearTimeout(to);return false}
+    return (c&&String(c).trim())?'ok':'dead';   // 必须真有回话内容
+  }catch(e){clearTimeout(to);return 'cooldown'}
 }
 async function testOne(id){
   const a=$('a_'+cssid(id)); if(a)a.innerHTML='<span class="state testing">测试中</span>';
-  const ok=await callModel(id);
-  TESTS[id]=ok?'ok':'bad'; save();
-  if(ok){render(); toast('🟢 '+id+' 真的回话了')}
-  else dropModel(id);   // 回不来 → 当场废除
-  return ok;
+  const st=await callModel(id);
+  if(st==='ok'){TESTS[id]='ok';save();render();toast('🟢 '+id+' 真的回话了')}
+  else if(st==='cooldown'){TESTS[id]='';save();render();toast('⏳ 免费额度冷却中，约 45 秒后自动恢复（未废除）')}
+  else {TESTS[id]='bad';save();dropModel(id);}   // 真回不来 → 当场废除
+  return st==='ok';
 }
 async function probeAll(){
   const ids=visible().map(m=>m.id);
   if(!ids.length){toast('列表是空的，先重新体检');return}
   toast('逐个实测 '+ids.length+' 个，失败的会当场废除…');
   const q=ids.slice(); let okn=0,badn=0;
+  let cool=0;
+  // 串行、温和：绝不并发狂打，避免把免费额度打到限流
   const worker=async()=>{
     while(q.length){
       const id=q.shift();
       const a=$('a_'+cssid(id)); if(a)a.innerHTML='<span class="state testing">测试中</span>';
-      const ok=await callModel(id); TESTS[id]=ok?'ok':'bad';
-      if(ok)okn++; else {badn++; if(!DROPPED.includes(id))DROPPED.push(id);}
+      const st=await callModel(id);
+      if(st==='ok'){okn++;TESTS[id]='ok'}
+      else if(st==='cooldown'){cool++;TESTS[id]='';q.length=0;}  // 遇限流立即停测，别再打
+      else {badn++;TESTS[id]='bad';if(!DROPPED.includes(id))DROPPED.push(id);}
       save(); render();
+      await new Promise(r=>setTimeout(r,600));
     }
   };
-  await Promise.all([worker(),worker(),worker()]);
-  toast('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除');
+  await worker();
+  toast(cool?('遇到免费额度冷却，已停止测试（未废除任何模型），约 45 秒后再试'):('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除'));
 }
 
 // ---------- boot ----------
