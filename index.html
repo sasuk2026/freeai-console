@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的 AI 网关 · 极简控制台</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --sub:#6b7280; --line:#e8eaed;
+    --brand:#ff7a45; --brand2:#ff9a5a; --ok:#16a34a; --bad:#dc2626; --warn:#d97706;
+    --chip:#f1f3f5; --chipon:#fff1e9; --radius:16px; --shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0f1115;--card:#191c22;--ink:#eef0f3;--sub:#9aa1ab;--line:#292e37;
+    --chip:#232830;--chipon:#3a2417;--shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);}
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+    padding:env(safe-area-inset-top) 14px calc(env(safe-area-inset-bottom) + 40px);}
+  .wrap{max-width:660px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;padding:20px 4px 6px}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:grid;place-items:center;font-size:20px;box-shadow:var(--shadow);flex:0 0 auto}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.3px}
+  .tagline{color:var(--sub);font-size:12.5px;margin-top:1px}
+  .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9aa1ab}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+  .dot.off{background:var(--bad)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-top:14px}
+  .step{display:flex;align-items:center;gap:9px;margin:0 0 12px}
+  .num{width:22px;height:22px;border-radius:7px;background:var(--chipon);color:var(--brand);
+    font-size:12px;font-weight:800;display:grid;place-items:center;flex:0 0 auto}
+  .step h2{font-size:15px;margin:0;font-weight:700}
+  .step .hint{margin-left:auto;font-size:11.5px;color:var(--sub)}
+
+  .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+  .field{flex:1;min-width:0;background:var(--chip);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;font-size:13px}
+  .field .k{font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px}
+  .field .v{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+    word-break:break-all;margin-top:2px;color:var(--ink)}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px;transition:transform .06s,opacity .15s}
+  button:active{transform:scale(.97)}
+  .btn{background:var(--brand);color:#fff;font-weight:600;padding:10px 15px;font-size:14px}
+  .btn.ghost{background:var(--chip);color:var(--ink);border:1px solid var(--line);font-weight:500}
+  .btn.mini{padding:6px 10px;font-size:12px;border-radius:8px}
+  .btn.full{width:100%;padding:13px;font-size:15px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .iconbtn{background:var(--chip);border:1px solid var(--line);color:var(--ink);
+    width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:0 0 auto}
+
+  .keybox{margin-top:10px;background:linear-gradient(135deg,#fff5ee,#ffe9db);
+    border:1px dashed var(--brand2);border-radius:12px;padding:13px;display:none}
+  @media (prefers-color-scheme:dark){.keybox{background:linear-gradient(135deg,#2a1c14,#33231a)}}
+  .keybox.show{display:block}
+  .keybox .kv{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;
+    font-weight:600;word-break:break-all;color:var(--ink);margin:4px 0 10px}
+
+  .copypill{display:inline-flex;align-items:center;gap:5px;background:var(--chip);
+    border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12.5px;
+    color:var(--ink);margin:5px 6px 0 0}
+  .copypill:active{background:var(--chipon)}
+
+  .search{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line);
+    background:var(--chip);color:var(--ink);font-size:14px;outline:none}
+  .search:focus{border-color:var(--brand2)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0}
+  .chip{border:1px solid var(--line);background:var(--chip);color:var(--sub);
+    padding:6px 11px;border-radius:20px;font-size:12.5px;font-weight:500}
+  .chip.on{background:var(--chipon);color:var(--brand);border-color:var(--brand2);font-weight:700}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 10px}
+  .toolbar select{padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+    background:var(--chip);color:var(--ink);font-size:12.5px}
+  .toolbar label{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:5px}
+
+  .list{margin-top:6px;max-height:440px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .m{display:flex;gap:10px;align-items:flex-start;padding:11px 2px;border-top:1px solid var(--line)}
+  .m:first-child{border-top:0}
+  .m .info{flex:1;min-width:0}
+  .m .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+    font-weight:600;word-break:break-all}
+  .m .meta{font-size:11px;color:var(--sub);margin-top:3px;display:flex;flex-wrap:wrap;gap:5px 9px}
+  .badge{font-size:10px;padding:1px 6px;border-radius:5px;background:var(--chip);color:var(--sub)}
+  .badge.cap{background:var(--chipon);color:var(--brand)}
+  .m .acts{display:flex;flex-direction:column;gap:5px;flex:0 0 auto}
+  .state{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
+  .state.untest{background:var(--chip);color:var(--sub)}
+  .state.ok{background:rgba(22,163,74,.13);color:var(--ok)}
+  .state.bad{background:rgba(220,38,38,.12);color:var(--bad)}
+  .state.testing{background:rgba(217,119,6,.14);color:var(--warn)}
+  .count{font-size:12px;color:var(--sub);margin:2px 0 8px}
+
+  .config{margin-top:12px;background:var(--chip);border:1px solid var(--line);border-radius:11px;
+    padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+    color:var(--ink);white-space:pre-wrap;word-break:break-all;line-height:1.6}
+  details{margin-top:10px}
+  summary{font-size:12.5px;color:var(--sub);cursor:pointer;padding:4px 0}
+  .note{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:14px;padding:0 4px}
+  .note b{color:var(--warn)}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#1b1f24;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;
+    opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">⚡</div>
+    <div>
+      <h1>我的 AI 网关</h1>
+      <div class="tagline">登录 · 建 API · 筛模型，三步搞定</div>
+    </div>
+    <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
+  </header>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="step"><span class="num">1</span><h2>账号</h2><span class="hint">已帮你建好</span></div>
+    <div class="row">
+      <div class="field" style="flex:2"><div class="k">网关地址</div><div class="v" id="baseText"></div></div>
+      <button class="iconbtn" onclick="cp(BASE,'已复制网关地址')" title="复制">⧉</button>
+    </div>
+    <div class="row">
+      <div class="field"><div class="k">管理密码（登录面板用）</div><div class="v">sk-834298</div></div>
+      <button class="iconbtn" onclick="cp('sk-834298','已复制密码')" title="复制">⧉</button>
+    </div>
+    <div class="note" style="margin-top:8px">这套凭据就是你的账号。平时<span style="color:var(--brand);font-weight:600">不用进那个大面板</span>，下面两步就够了。</div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step"><span class="num">2</span><h2>创建 API Key</h2><span class="hint"><span id="keyCount"></span></span></div>
+    <button class="btn full" id="newKeyBtn" onclick="newKey()">＋ 生成一个新的 API Key</button>
+    <div class="keybox" id="keybox">
+      <div class="k" style="font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">你的 API Key</div>
+      <div class="kv" id="keyVal"></div>
+      <button class="btn mini" onclick="cp(CUR,'已复制 API Key')">⧉ 复制 Key</button>
+      <button class="btn mini ghost" onclick="cp(configText(),'已复制完整配置')">⧉ 复制配置</button>
+      <div class="config" id="configBox"></div>
+    </div>
+    <details>
+      <summary>手动填入你自己的 Key / 修改网关地址</summary>
+      <div class="row" style="margin-top:8px">
+        <input class="search" id="manualKey" placeholder="粘贴你已有的 API Key（可选）">
+      </div>
+      <div class="row">
+        <input class="search" id="manualBase" placeholder="网关地址">
+        <button class="btn mini" onclick="saveManual()">保存</button>
+      </div>
+    </details>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="step"><span class="num">3</span><h2>筛选模型</h2><span class="hint" id="modelTotal"></span></div>
+    <input class="search" id="q" placeholder="🔍 搜模型名，如 glm / claude / gpt / auto" oninput="render()">
+    <div class="chips" id="chips"></div>
+    <div class="toolbar">
+      <label>来源
+        <select id="owner" onchange="render()"><option value="">全部</option></select>
+      </label>
+      <label>最小上下文
+        <select id="ctx" onchange="render()">
+          <option value="0">不限</option><option value="32000">32K+</option>
+          <option value="128000">128K+</option><option value="200000">200K+</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="onlyOk" onchange="render()"> 只看实测能用</label>
+    </div>
+    <div class="toolbar">
+      <button class="btn mini" id="probeBtn" onclick="probe()">🔍 帮我测出能用的</button>
+      <button class="btn mini ghost" onclick="refreshModels()">↻ 刷新列表</button>
+      <button class="btn mini ghost" onclick="resetTests()">清除实测</button>
+    </div>
+    <div class="count" id="count"></div>
+    <div class="list" id="list"></div>
+    <div class="note">
+      「帮我测出能用的」会挑当前筛选里的前若干个模型，真实发一句话测试并<b>把能回话的标绿置顶</b>。
+      免费通道有的需要首次在面板里接入一次上游额度、或依赖浏览器组件，测不过属正常，绿色的才是稳的。
+    </div>
+  </div>
+
+  <div class="note" style="text-align:center">
+    数据直连你自己的网关 · 不经过任何第三方 · <b>别把本页公开分享</b>（含 Key 与密码）
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BOOT = {"base":"https://omniroute-freeai.onrender.com","keys":["sk-201106206ca2672a-6a33c4-198e79e9","sk-201106206ca2672a-408b63-390a4092","sk-201106206ca2672a-5458cf-14fa834c","sk-201106206ca2672a-7091f5-9f0f6908","sk-201106206ca2672a-cd476d-a666c22e","sk-201106206ca2672a-138317-f925f367"],"models":[{"id":"auto/best-coding","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-reasoning","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-fast","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-chat","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-coding-fast","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/pro-coding","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/pro-reasoning","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/pro-chat","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/pro-fast","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/coding","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/fast","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/chat","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/cheap","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/offline","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/smart","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-free","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/thrifty","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/best-chaos","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/chaos","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/coding:fast","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/coding:cheap","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/coding:free","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/coding:reliable","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/reasoning","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/glm","o":"combo","ctx":1000000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/gemma","o":"combo","ctx":128000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/llama","o":"combo","ctx":128000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/gemini","o":"combo","ctx":1000000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true,"vision":true}},{"id":"auto/kimi","o":"combo","ctx":131000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/qwen","o":"combo","ctx":128000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/deepseek","o":"combo","ctx":128000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/gpt","o":"combo","ctx":872000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"auto/lkgp","o":"combo","ctx":400000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"temperature":true}},{"id":"dva/claude-fable-5-1-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-fable-5-1-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-fable-5-1-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-fable-5-1-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-fable-5-1-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-max-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-xhigh-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-high-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-medium-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-low-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-5-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-max-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-xhigh-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-high-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-medium-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-low-fast","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-opus-4-8-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-5-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-5-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-5-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-5-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-5-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-4-6-thinking-1m","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-4-6-1m","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-4-6-thinking","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/claude-sonnet-4-6","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/MODEL_PRIVATE_11","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-max-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-xhigh-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-high-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-medium-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-low-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-none-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-sol-none","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-max-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-xhigh-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-high-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-medium-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-low-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-none-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-terra-none","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-max-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-xhigh-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-xhigh","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-high-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-medium-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-medium","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-low-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-none-priority","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/gpt-5-6-luna-none","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/kimi-k3-max","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/kimi-k3-high","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/kimi-k3-low","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/kimi-k2-7","o":"devin-cli-agentic","ctx":262144,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-flash-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-flash-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/glm-5-3-flash-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/swe-1-7","o":"devin-cli-agentic","ctx":262000,"c":{"tool_calling":true}},{"id":"dva/swe-1-7-medium","o":"devin-cli-agentic","ctx":262000,"c":{"tool_calling":true}},{"id":"dva/swe-1-7-lightning","o":"devin-cli-agentic","ctx":202752,"c":{"tool_calling":true}},{"id":"dva/swe-1-7-lightning-medium","o":"devin-cli-agentic","ctx":202752,"c":{"tool_calling":true}},{"id":"dva/adaptive","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/grok-4-6-xhigh","o":"devin-cli-agentic","ctx":500000,"c":{"tool_calling":true}},{"id":"dva/grok-4-6-high","o":"devin-cli-agentic","ctx":500000,"c":{"tool_calling":true}},{"id":"dva/grok-4-6-medium","o":"devin-cli-agentic","ctx":500000,"c":{"tool_calling":true}},{"id":"dva/grok-4-6-low","o":"devin-cli-agentic","ctx":500000,"c":{"tool_calling":true}},{"id":"dva/inkling-max","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/inkling-xhigh","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/inkling-high","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/inkling-medium","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/inkling-low","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/inkling-none","o":"devin-cli-agentic","ctx":200000,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-flash-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-flash-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-flash-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/nemotron-3-ultra-high","o":"devin-cli-agentic","ctx":262144,"c":{"tool_calling":true}},{"id":"dva/nemotron-3-ultra-medium","o":"devin-cli-agentic","ctx":262144,"c":{"tool_calling":true}},{"id":"dva/nemotron-3-ultra-none","o":"devin-cli-agentic","ctx":262144,"c":{"tool_calling":true}},{"id":"dva/gemini-3-7-flash-high","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/gemini-3-7-flash-medium","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/gemini-3-7-flash-low","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/gemini-3-1-pro-high","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/gemini-3-1-pro-low","o":"devin-cli-agentic","ctx":1048576,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-pro-max","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-pro-high","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"dva/deepseek-v4-pro-low","o":"devin-cli-agentic","ctx":1000000,"c":{"tool_calling":true}},{"id":"no-think/dva/claude-opus-5-max-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-5-max","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-5-xhigh-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-5-high-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-5-medium-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-5-low-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-max-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-max","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-xhigh-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-high-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-medium-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-opus-4-8-low-fast","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-sonnet-5-max","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-sonnet-4-6-thinking-1m","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-sonnet-4-6-1m","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-sonnet-4-6-thinking","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"no-think/dva/claude-sonnet-4-6","o":"devin-cli-agentic","ctx":200000,"c":{"vision":true,"tool_calling":true,"reasoning":true}},{"id":"ddgw/gpt-5.4-mini","o":"duckduckgo-web","ctx":409600,"c":{"vision":true,"reasoning":true,"thinking":true,"supportsThinking":true,"effort_tiers":["none","low","medium","high","xhigh","max"]}},{"id":"ddgw/gpt-5.6-luna","o":"duckduckgo-web","ctx":1050000,"c":{"vision":true,"reasoning":true,"thinking":true,"supportsThinking":true,"effort_tiers":["none","low","medium","high","xhigh","max"]}},{"id":"ddgw/claude-haiku-4-5","o":"duckduckgo-web","ctx":200000,"c":{"vision":true,"reasoning":true}},{"id":"ddgw/mistral-small-2603","o":"duckduckgo-web","ctx":128000,"c":{"reasoning":true}},{"id":"ddgw/tinfoil/gpt-oss-120b","o":"duckduckgo-web","ctx":400000,"c":{"reasoning":true}},{"id":"ddgw/tinfoil/gemma4-31b","o":"duckduckgo-web","ctx":128000,"c":{"reasoning":true}},{"id":"cfp/zai-org/glm-5.2","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/moonshotai/kimi-k2.7-code","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/moonshotai/kimi-k2.6","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/deepseek-ai/deepseek-v4-pro-0813","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/deepseek-ai/deepseek-v4-flash-0731","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/zai-org/glm-4.7-flash","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/openai/gpt-oss-120b","o":"cloudflare-playground","ctx":400000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/openai/gpt-oss-20b","o":"cloudflare-playground","ctx":400000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/meta-llama/llama-3.3-70b-instruct-fp8-fast","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/meta/llama-3.1-8b-instruct-fp8","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/meta/llama-4-scout-17b-16e-instruct","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true}},{"id":"cfp/nvidia/nemotron-3-120b-a12b","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/qwen/qwen2.5-coder-32b-instruct","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/qwen/qwen3-30b-a3b-fp8","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/qwen/qwq-32b","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/deepseek-ai/deepseek-r1-distill-qwen-32b","o":"cloudflare-playground","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cfp/google/gemma-4-26b-a4b-it","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/mistralai/mistral-small-3.1-24b-instruct","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/ibm-granite/granite-4.0-h-micro","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"cfp/aisingapore/gemma-sea-lion-v4-27b-it","o":"cloudflare-playground","ctx":128000,"c":{"tool_calling":true,"reasoning":true}},{"id":"veoaifree-web/veo","o":"veoaifree-web","ctx":0,"c":{}},{"id":"veoaifree-web/seedance","o":"veoaifree-web","ctx":0,"c":{}},{"id":"veo-free/veo","o":"veoaifree-web","ctx":0,"c":{}},{"id":"veo-free/seedance","o":"veoaifree-web","ctx":0,"c":{}},{"id":"aug/sonnet4.6","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/fable-5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/haiku4.5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/sonnet4.5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/sonnet4.6-500k","o":"auggie","ctx":500000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/sonnet5-high","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/sonnet5-500k","o":"auggie","ctx":500000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.6","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.6-500k","o":"auggie","ctx":500000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.7","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.7-500k","o":"auggie","ctx":500000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/opus4.8","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gemini-3.1-pro-preview","o":"auggie","ctx":1000000,"c":{"vision":true,"tool_calling":true,"reasoning":true,"thinking":true,"supportsThinking":true,"effort_tiers":["none","low","medium","high","xhigh","max"]}},{"id":"aug/gpt5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.1","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.2","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.4","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.4-mini","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.5","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.6-luna","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.6-sol","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/gpt5.6-terra","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/glm-5.2","o":"auggie","ctx":1000000,"c":{"tool_calling":true,"reasoning":true,"thinking":true,"supportsThinking":true}},{"id":"aug/kimi-k2.6","o":"auggie","ctx":131000,"c":{"vision":true,"tool_calling":true,"reasoning":true,"thinking":true,"supportsThinking":true,"effort_tiers":["none","low","medium","high","xhigh","max"]}},{"id":"aug/kimi-k2.7","o":"auggie","ctx":131000,"c":{"vision":true,"tool_calling":true,"reasoning":true,"thinking":true,"supportsThinking":true,"effort_tiers":["none","low","medium","high","xhigh","max"]}},{"id":"aug/prism-a","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"aug/prism-b","o":"auggie","ctx":200000,"c":{"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5.3-flash","o":"zcode","ctx":1000000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5.3","o":"zcode","ctx":1000000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5.3-max","o":"zcode","ctx":1000000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5.2","o":"zcode","ctx":1000000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5.1","o":"zcode","ctx":204800,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5","o":"zcode","ctx":200000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-5-turbo","o":"zcode","ctx":200000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.7-flash","o":"zcode","ctx":200000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.7","o":"zcode","ctx":200000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.6v","o":"zcode","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.6","o":"zcode","ctx":200000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.5v","o":"zcode","ctx":16000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.5","o":"zcode","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"zc/glm-4.5-air","o":"zcode","ctx":128000,"c":{"thinking":true,"supportsThinking":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-ultra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-astra-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-ultra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-sol-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-ultra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6.1-sol-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-6-luna-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-ultra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-sol-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-ultra","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-terra-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna-max","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna-xhigh","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna-high","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna-medium","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.6-luna-low","o":"codex-app-server","ctx":872000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.5","o":"codex-app-server","ctx":400000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.5-xhigh","o":"codex-app-server","ctx":400000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.5-high","o":"codex-app-server","ctx":400000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.5-medium","o":"codex-app-server","ctx":400000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"cxa/gpt-5.5-low","o":"codex-app-server","ctx":400000,"c":{"thinking":true,"supportsThinking":true,"vision":true,"tool_calling":true,"reasoning":true}},{"id":"unc/turboderp/Qwen3.8-27B-exl3","o":"uncloseai","ctx":65536,"c":{"tool_calling":true,"reasoning":true}},{"id":"aihorde/2DN","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/526Mix-Animated","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/A-Zovya RPG Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AAM XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AbsoluteReality","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Abyss OrangeMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AbyssOrangeMix-AfterDark","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ACertainThing","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AIO Pixel Art","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AlbedoBase XL (SDXL)","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AlbedoBase XL 3.1","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AMPonyXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Analog Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Analog Madness","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anima-Turbo-v1.1","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Animagine XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anime Pencil Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anygen","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/AnyLoRA","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anything Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anything Diffusion Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anything v3","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Anything v5","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/App Icon Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Art Of Mtg","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Aurora","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Babes","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/BB95 Furry Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/BB95 Furry Mix v14","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/BigASP","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Blank Canvas XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/BlenderMix Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/BweshMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/CamelliaMix 2.5D","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Cetus-Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Cheese Daddys Landscape Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Cheyenne","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Comic-Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Counterfeit","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/CyberRealistic Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/CyriousMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Dan Mumford Style","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Deliberate","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Deliberate 3.0","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Deliberate Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Double Exposure Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Dreamlike Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DreamLikeSamKuvshinov","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Dreamshaper","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DreamShaper Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DreamShaper XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DucHaiten","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DucHaiten Classic Anime","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/DucHaiten GameArt (Unreal) Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Dungeons and Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Dungeons n Waifus","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Edge Of Realism","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Eimis Anime Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Elysium Anime","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Epic Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Epic Diffusion Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Ether Real Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Experience","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ExpMix Line","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/FaeTastic","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Fantasy Card Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Flat-2D Animerge","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Flux.1-Schnell fp8 (Compact)","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Fustercluck","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Galena Redux","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Ghibli Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/GhostMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Grapefruit Hentai","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/GTA5 Artwork Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/HASDX","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Hassaku XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Healy's Anime Blend","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Hentai Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Hidden Canvas","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/HolyMix ILXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/HRL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ICBINP - I Can't Believe It's Not Photography","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ICBINP XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/iCoMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/iCoMix Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Illuminati Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Inkpunk Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Jim Eidomode","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Juggernaut XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/KaynegIllustriousXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Krea2-Turbo_fp8","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Lawlas's yiff mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Liberty","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Lyriel","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/majicMIX realistic","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/MeinaMix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/MHXL - Aventis Horizon","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Midjourney PaintArt","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Mistoon Anime","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ModernArt Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/MoonMix Fantasy","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Moss-Image-Base","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/MOSS-Image-SFT","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Movie Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/NatViS","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Neurogen","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/NeverEnding Dream","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/NEW ERA","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/noob_v_pencil XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/noobEvo","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Nova Anime XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Nova Flat XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Nova Furry Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Nova Furry XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/NTR MIX IL-Noob XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Pastel Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Perfect World","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/PerfectDeliberate","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Photon","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Pixel Illustrious","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Poison","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Pony Diffusion XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Pony Realism","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/PPP","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Prefect Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Pretty 2.5D","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Project Unreal Engine 5","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Quiet Goodnight XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Qwen-Image_fp8","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Rag Illustrious Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Real Dos Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/RealBiter","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Realism Engine","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Realistic Vision","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Realistic Vision Inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Reliberate","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Rev Animated","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Ri-Mix","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/RPG","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Sci-Fi Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/SD-Silicon","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/SDXL 1.0","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Something","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Stable Cascade 1.0","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/stable_diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/stable_diffusion_2.1","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/stable_diffusion_inpainting","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/SwamPonyXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ToonYou","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/TUNIX Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Uhmami","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Ultraspice","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Unstable Diffusers XL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Unstable Ink Dream","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/URPM","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Vector Art","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/WAI-ANI-NSFW-PONYXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/WAI-CUTE Pony","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/WAI-NSFW-illustrious-SDXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/waifu_diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Western Animation Diffusion","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/White Pony Diffusion 4","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Woop-Woop Photo","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Yiffy","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Z-Image-Turbo","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/ZavyChromaXL","o":"aihorde","ctx":0,"c":{"reasoning":true}},{"id":"aihorde/Zeipher Female Model","o":"aihorde","ctx":0,"c":{"reasoning":true}}]};
+
+let BASE = localStorage.getItem('gw_base') || BOOT.base;
+let KEYS = BOOT.keys.slice();
+let usedKeys = JSON.parse(localStorage.getItem('gw_usedkeys') || '[]');
+let CUR = localStorage.getItem('gw_cur') || '';
+let MODELS = BOOT.models.slice();
+let TESTS = JSON.parse(localStorage.getItem('gw_tests') || '{}'); // id -> 'ok'|'bad'
+let DEFAULT_MODEL = localStorage.getItem('gw_model') || 'auto/best-free';
+let filter = 'all';
+let probing = false;
+
+const CAPS = [['tool','🛠 工具调用'],['reasoning','🧠 推理'],['vision','👁 视觉'],['thinking','💭 思考'],['auto','⭐ 智能路由'],['free','🆓 免费优先']];
+
+// ---------- utils ----------
+function $(id){return document.getElementById(id)}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900)}
+function cp(text,msg){
+  const done=()=>toast(msg||'已复制');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text,done))}
+  else fallback(text,done);
+}
+function fallback(text,cb){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity=0;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb()}catch(e){toast('复制失败，请长按选中')}document.body.removeChild(ta)}
+function save(){localStorage.setItem('gw_base',BASE);localStorage.setItem('gw_cur',CUR);localStorage.setItem('gw_usedkeys',JSON.stringify(usedKeys));localStorage.setItem('gw_tests',JSON.stringify(TESTS));localStorage.setItem('gw_model',DEFAULT_MODEL)}
+
+// ---------- step1 / status ----------
+function initBase(){
+  $('baseText').textContent=BASE; $('manualBase').value=BASE; $('manualKey').value=CUR;
+  fetch(BASE+'/healthz',{mode:'cors'}).then(r=>{setStatus(r.ok)}).catch(()=>setStatus(false));
+}
+function setStatus(on){$('dot').className='dot '+(on?'on':'off');$('statustext').textContent=on?'在线':'离线/休眠中'}
+function saveManual(){
+  const b=$('manualBase').value.trim().replace(/\/$/,''); const k=$('manualKey').value.trim();
+  if(b)BASE=b; if(k)CUR=k; save(); initBase(); updateKey(); render(); toast('已保存');
+}
+
+// ---------- step2 ----------
+function newKey(){
+  const next=KEYS.find(k=>!usedKeys.includes(k));
+  if(!next){toast('Key 池用完了，去面板再建一个');return}
+  usedKeys.push(next); CUR=next; save(); updateKey(); cp(next,'新 Key 已生成并复制 ✅');
+}
+function updateKey(){
+  const box=$('keybox');
+  if(CUR){box.classList.add('show');$('keyVal').textContent=CUR;$('configBox').textContent=configText();$('manualKey').value=CUR}
+  else box.classList.remove('show');
+  $('keyCount').textContent='已生成 '+usedKeys.length+'/'+KEYS.length;
+  $('newKeyBtn').disabled=usedKeys.length>=KEYS.length;
+}
+function configText(){
+  return 'Base URL : '+BASE+'/v1\n'
+    +'API Key  : '+(CUR||'（先点上面生成）')+'\n'
+    +'Model    : '+DEFAULT_MODEL+'\n\n'
+    +'curl '+BASE+'/v1/chat/completions \\\n'
+    +'  -H "Authorization: Bearer '+(CUR||'YOUR_KEY')+'" \\\n'
+    +'  -H "Content-Type: application/json" \\\n'
+    +'  -d \'{"model":"'+DEFAULT_MODEL+'","messages":[{"role":"user","content":"你好"}]}\'';
+}
+
+// ---------- step3 ----------
+function initChips(){
+  $('chips').innerHTML='<button class="chip on" data-f="all" onclick="setChip(\'all\')">全部</button>'
+    +CAPS.map(c=>'<button class="chip" data-f="'+c[0]+'" onclick="setChip(\''+c[0]+'\')">'+c[1]+'</button>').join('');
+  const owners=[...new Set(MODELS.map(m=>m.o))].sort();
+  $('owner').innerHTML='<option value="">全部</option>'+owners.map(o=>'<option value="'+o+'">'+o+' ('+MODELS.filter(m=>m.o===o).length+')</option>').join('');
+  $('modelTotal').textContent=MODELS.length+' 个模型';
+}
+function setChip(f){filter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));render()}
+function has(m,cap){
+  const c=m.c||{};
+  if(cap==='auto')return m.id.startsWith('auto/');
+  if(cap==='free')return m.id.startsWith('auto/')||/free|thrift|cheap|offline|horde/i.test(m.id);
+  if(cap==='reasoning')return c.reasoning||c.thinking;
+  return !!c[cap];
+}
+function filtered(){
+  const q=$('q').value.trim().toLowerCase(), ow=$('owner').value, minc=+$('ctx').value;
+  const oo=$('onlyOk').checked;
+  let arr=MODELS.filter(m=>{
+    if(q&&!m.id.toLowerCase().includes(q))return false;
+    if(ow&&m.o!==ow)return false;
+    if((m.ctx||0)<minc)return false;
+    if(filter!=='all'&&!has(m,filter))return false;
+    if(oo&&TESTS[m.id]!=='ok')return false;
+    return true;
+  });
+  arr.sort((a,b)=>{
+    const sa=TESTS[a.id]==='ok'?0:TESTS[a.id]==='bad'?2:1;
+    const sb=TESTS[b.id]==='ok'?0:TESTS[b.id]==='bad'?2:1;
+    if(sa!==sb)return sa-sb;
+    const aa=a.id.startsWith('auto/')?0:1, bb=b.id.startsWith('auto/')?0:1;
+    if(aa!==bb)return aa-bb;
+    return (b.ctx||0)-(a.ctx||0);
+  });
+  return arr;
+}
+function render(){
+  const arr=filtered();
+  const okc=MODELS.filter(m=>TESTS[m.id]==='ok').length;
+  $('count').textContent='显示 '+arr.length+' 个'+(okc?' · 已确认可用 '+okc+' 个':'')+(Object.keys(TESTS).length?' · 已测 '+Object.keys(TESTS).length:'');
+  $('list').innerHTML=arr.slice(0,120).map(m=>{
+    const st=TESTS[m.id]; const cls=st==='ok'?'ok':st==='bad'?'bad':'untest';
+    const txt=st==='ok'?'🟢 能用':st==='bad'?'🔴 不可用':'未测';
+    const caps=Object.entries(m.c||{}).filter(([k,v])=>v).slice(0,3).map(([k])=>'<span class="badge cap">'+k+'</span>').join('');
+    const isDef=m.id===DEFAULT_MODEL?'<span class="badge cap">已设为默认</span>':'';
+    return '<div class="m" id="m_'+cssid(m.id)+'">'
+      +'<div class="info"><div class="name">'+esc(m.id)+'</div>'
+      +'<div class="meta"><span>'+esc(m.o)+'</span><span>ctx '+fmt(m.ctx)+'</span>'+caps+isDef+'</div></div>'
+      +'<div class="acts"><span class="state '+cls+'" id="s_'+cssid(m.id)+'">'+txt+'</span>'
+      +'<button class="btn mini ghost" onclick="testOne(\''+jsq(m.id)+'\')">测一下</button>'
+      +'<button class="btn mini" onclick="setDefault(\''+jsq(m.id)+'\')">用这个</button></div></div>';
+  }).join('')||'<div class="note" style="padding:20px 0;text-align:center">没有符合条件的模型，换个筛选试试</div>';
+}
+function cssid(s){return s.replace(/[^a-zA-Z0-9]/g,'_')}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+function fmt(n){if(!n)return '—';return n>=1000?(n/1000)+'K':n}
+function setDefault(id){DEFAULT_MODEL=id;save();updateKey();render();cp(id,'已设为默认模型：'+id)}
+
+async function testOne(id,btn){
+  if(!CUR){toast('先在第 2 步生成一个 API Key');return}
+  const s=$('s_'+cssid(id)); if(s){s.className='state testing';s.textContent='测试中'}
+  const ok=await callModel(id,CUR);
+  TESTS[id]=ok?'ok':'bad'; save();
+  if(s){s.className='state '+(ok?'ok':'bad');s.textContent=ok?'🟢 能用':'🔴 不可用'}
+  return ok;
+}
+async function callModel(model,key){
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),25000);
+  try{
+    const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'user',content:'hi'}],max_tokens:8,stream:false})});
+    clearTimeout(to);
+    if(!r.ok)return false;
+    const d=await r.json();
+    const c=d&&d.choices&&d.choices[0]&&(d.choices[0].message||{}).content;
+    return !!(c||d.choices);
+  }catch(e){clearTimeout(to);return false}
+}
+async function probe(){
+  if(probing)return;
+  if(!CUR){toast('先在第 2 步生成一个 API Key');return}
+  probing=true; const btn=$('probeBtn'); btn.disabled=true; btn.textContent='测试中…'; setStatus(true);
+  const cands=filtered().slice(0,10).map(m=>m.id);
+  let done=0,okn=0;
+  const queue=cands.slice();
+  const worker=async()=>{
+    while(queue.length){
+      const id=queue.shift(); const s=$('s_'+cssid(id));
+      if(s){s.className='state testing';s.textContent='测试中'}
+      const ok=await callModel(id,CUR); TESTS[id]=ok?'ok':'bad'; if(ok)okn++;
+      const ss=$('s_'+cssid(id)); if(ss){ss.className='state '+(ok?'ok':'bad');ss.textContent=ok?'🟢 能用':'🔴 不可用'}
+      done++; btn.textContent='测试中… '+done+'/'+cands.length; save();
+    }
+  };
+  await Promise.all([worker(),worker(),worker(),worker()]);
+  probing=false; btn.disabled=false; btn.textContent='🔍 帮我测出能用的';
+  render(); toast(okn?('测完：'+okn+' 个能回话 ✅ 已标绿置顶'):'这批都没回话，多半是上游额度没接入/组件缺失，换个来源再试');
+}
+function resetTests(){TESTS={};save();render();toast('已清除实测结果')}
+async function refreshModels(){
+  if(!CUR){toast('先生成 API Key 再刷新');return}
+  toast('拉取最新模型…');
+  try{
+    const r=await fetch(BASE+'/v1/models',{headers:{'Authorization':'Bearer '+CUR}});
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    MODELS=(d.data||[]).map(x=>({id:x.id,o:x.owned_by||'',ctx:x.context_length||x.max_input_tokens||0,
+      c:x.capabilities||{}}));
+    initChips(); render(); toast('已更新 '+MODELS.length+' 个模型');
+  }catch(e){toast('拉取失败，用内置列表')}
+}
+
+// ---------- boot ----------
+initBase(); initChips(); updateKey(); render();
+</script>
+</body>
+</html>
