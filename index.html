@@ -127,7 +127,7 @@
     <div class="logo">🚀</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">♾️ 7 家渠道 · 60+ 槽位 · 免 Key 可用</div>
+      <div class="tagline">⚡ 并发竞速秒回 · 7 家渠道 · 60+ 模型 · 免 Key</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -139,13 +139,13 @@
       <div class="field" style="flex:2"><div class="k">Base URL（OpenAI 兼容）</div><div class="v" id="baseText"></div></div>
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
-    <div class="note" style="margin-top:8px">这次给你铺了 <b>7 家来源渠道</b>：<b>① Cloudflare Workers AI</b>（51 个零凭证大模型 —— GPT-OSS 120B / Llama 3.3 70B / Kimi K2.7 / GLM-5.2 / Nemotron 120B，WebSocket 每请求新建独立会话，实测真回话）；<b>② LLM7.io</b>（DeepSeek V4 / GLM-5.3 等 6 个免 Key 模型）；<b>③ GitHub Models</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B，用服务端令牌）；<b>④ Pollinations</b>；<b>⑤ Netwrck</b>；<b>⑥ OpenRouter</b> ＋ <b>⑦ api.airforce</b>（这两家填免费 Key 解锁 GPT-5 / Claude）。全部灌进同一个无限额度池轮转，免费档永不校验 Key。</div>
+    <div class="note" style="margin-top:8px">这次给你铺了 <b>7 家来源渠道</b>：<b>① Cloudflare Workers AI</b>（51 个零凭证大模型 —— GPT-OSS 120B / Llama 3.3 70B / Kimi K2.7 / GLM-5.2 / Nemotron 120B，WebSocket 每请求新建独立会话，实测真回话）；<b>② LLM7.io</b>（DeepSeek V4 / GLM-5.3 等 6 个免 Key 模型）；<b>③ GitHub Models</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B，用服务端令牌）；<b>④ Pollinations</b>；<b>⑤ Netwrck</b>；<b>⑥ OpenRouter</b> ＋ <b>⑦ api.airforce</b>（这两家填免费 Key 解锁 GPT-5 / Claude）。全部灌进同一个无限额度池轮转，免费档永不校验 Key。<b>清单里一共 60+ 个模型</b>，个别第三方 App 的「测连接」只把前 10 个当示例显示，不代表只有 10 个——点 <code>GET /v1/models</code> 能看到全量。</div>
   </div>
 
   <!-- 无限额度池 -->
   <div class="card">
     <div class="step"><span class="num">♾️</span><h2>无限额度池</h2><span class="hint" id="poolHint">读取中…</span></div>
-    <div class="note" style="margin-top:0">7 家渠道各有各的额度，妹妹把它们全灌进一个池子：<b>全局轮转</b>把请求摊到不同槽位、<b>限流自动跳</b>到下一个、<b>30 秒自动复活</b>、<b>单次请求一路重试到真回话</b>。往下填几个免费 Key，池子还会<b>线性变大</b>。严格意义的「无限」任何 API 都不存在，但这样用起来就是打不完，而且不会拿小模型偷偷冒充你要的旗舰。</div>
+    <div class="note" style="margin-top:0">7 家渠道各有各的额度，妹妹把它们全灌进一个池子：<b>⚡ 并发竞速</b>——每次请求同时打 4 家不同渠道，<b>谁先真回话就用谁</b>，其余立刻中止（不再串行挨个等超时）；<b>流式秒首包</b>，聊天框不再干转圈；<b>全局轮转</b>摊额度、<b>限流自动跳</b>、<b>30 秒自动复活</b>、<b>17 秒硬上限</b>绝不挂死。往下填几个免费 Key，池子还会<b>线性变大</b>。严格意义的「无限」任何 API 都不存在，但这样用起来就是打不完，而且响应头 <code>X-FreeAI-Model</code> 标明实际模型，不会拿小模型偷偷冒充你要的旗舰。</div>
     <div class="poolbar" id="poolBar"></div>
   </div>
 
@@ -317,7 +317,8 @@ async function refreshModels(doTest){
     save();initOwner();render();updateKey();updateByok();
     const ready=MODELS.filter(m=>m.st==='ready').length;
     const flag=MODELS.filter(m=>m.tier==='flagship').length;
-    toast(MODELS.length?('加载完成：'+MODELS.length+' 个模型 · 🚀旗舰 '+flag+' 个 · 🟢已确认 '+ready+' 个'):'当前 0 个模型，稍后再试');
+    const idle=MODELS.filter(m=>m.st==='available').length;
+    toast(MODELS.length?('加载完成：'+MODELS.length+' 个模型 · 🚀旗舰 '+flag+' 个 · 🟢已确认 '+ready+' 个 · 🔵池内待命 '+idle+' 个'):'当前 0 个模型，稍后再试');
   }catch(e){
     $('list').innerHTML='<div class="empty">拉取失败（网关可能正在冷启动）。<br>稍等半分钟点「重新体检并刷新」再试。<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div>';
   }finally{btn.disabled=false;btn.textContent='↻ 重新体检并刷新'}
@@ -327,6 +328,7 @@ function initOwner(){
   $('owner').innerHTML='<option value="">全部来源</option>'+owners.map(o=>'<option value="'+esc(o)+'">'+esc(o)+' ('+MODELS.filter(m=>m.o===o).length+')</option>').join('');
 }
 function tierRank(t){return t==='flagship'?0:t==='pro'?1:2}
+function stRank(s){return s==='ready'?0:s==='available'?1:s==='needs_key'?2:3}
 function toggleFlag(){ONLY_FLAG=!ONLY_FLAG;render();toast(ONLY_FLAG?'已筛选：只看 🚀 旗舰模型':'已显示全部模型')}
 function visible(){
   const q=$('q').value.trim().toLowerCase(),ow=$('owner').value;
@@ -336,14 +338,15 @@ function visible(){
     if(q&&!(m.id+' '+m.label+' '+m.params+' '+m.up).toLowerCase().includes(q))return false;
     if(ow&&m.o!==ow)return false;
     return true;
-  }).sort((a,b)=>tierRank(a.tier)-tierRank(b.tier)||(a.st==='ready'?0:1)-(b.st==='ready'?0:1));
+  }).sort((a,b)=>tierRank(a.tier)-tierRank(b.tier)||stRank(a.st)-stRank(b.st));
 }
 function render(){
   const arr=visible();
   const ready=arr.filter(m=>m.st==='ready'||TESTS[m.id]==='ok').length;
   const flag=arr.filter(m=>m.tier==='flagship').length;
   const needkey=arr.filter(m=>m.needs_key).length;
-  $('count').textContent='显示 '+arr.length+' 个 · 🚀旗舰 '+flag+' · 🟢已确认 '+ready+' · 🔑需Key '+needkey+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
+  const idle=arr.filter(m=>m.st==='available').length;
+  $('count').textContent='显示 '+arr.length+' 个 · 🚀旗舰 '+flag+' · 🟢已确认 '+ready+' · 🔵池内待命 '+idle+' · 🔑需Key '+needkey+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
   $('modelTotal').textContent=arr.length+' 个';
   $('flagBtn').classList.toggle('on',ONLY_FLAG);
   let html='',lastTier='';
@@ -357,6 +360,7 @@ function render(){
     else if(t==='cool')badge='<span class="state cool">⏳ 冷却中</span>';
     else if(m.st==='needs_key')badge='<span class="state key">🔑 需 Key</span>';
     else if(m.st==='ready')badge='<span class="state ok">🟢 已确认</span>';
+    else if(m.st==='available')badge='<span class="state ok">🔵 池内待命</span>';
     else badge='<span class="state cool">⏳ 冷却中</span>';
     const isDef=m.id===DEFAULT_MODEL?'<span class="badge cap">默认</span>':'';
     const tierB=m.tier==='flagship'?'<span class="badge flag">🚀 旗舰</span>':'';
@@ -398,7 +402,7 @@ async function callModel(model){
   return 'cooldown';
 }
 async function callModelOnce(model){
-  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),90000);
+  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),25000);
   try{
     const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
       headers:extraHeaders(),
