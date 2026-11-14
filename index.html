@@ -103,7 +103,7 @@
     <div class="logo">⚡</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">建 Key · 只留能用的模型，三步搞定</div>
+      <div class="tagline">融合多家公益免费 API · 只留能用的模型</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -115,7 +115,7 @@
       <div class="field" style="flex:2"><div class="k">Base URL（OpenAI 兼容）</div><div class="v" id="baseText"></div></div>
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
-    <div class="note" style="margin-top:8px">这个网关<b>只把实测能回话的模型放进列表</b>，调不通的直接废除、不会出现在调用里。免费通道会随上游额度/网络变化，列表是实时体检的结果。</div>
+    <div class="note" style="margin-top:8px">网关已<b>融合多家公益免费 API</b>（Pollinations + Netwrck 等），统一成一个 OpenAI 兼容端点。<b>只把实测能回话的模型放进列表</b>，调不通的当场废除；一条通道限流会自动绕到另一家。</div>
   </div>
 
   <!-- STEP 2 -->
@@ -153,7 +153,7 @@
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div class="note">
-      列表来自网关的<b>实时体检</b>：只有真发了消息能回话的模型才会出现。点「逐个实测」会对当前列表再真调一次，<b>任何一个回不来的会当场从列表废除</b>；已废除的本页不再显示。
+      列表来自网关的<b>实时体检</b>：多家公益 API 逐个真发消息，只有回得来话的才出现，<b>来源</b>列标明它属于哪家免费通道。点「逐个实测」会再真调一次，<b>回不来的当场废除</b>；限流冷却不会误废除，稍等自动恢复。
     </div>
   </div>
 
