@@ -66,8 +66,13 @@
   @media (prefers-color-scheme:dark){.byok{background:linear-gradient(135deg,#241b38,#2e2247);border-color:#5b4488}}
   .byok .t{font-size:12.5px;font-weight:700;color:var(--purple);margin-bottom:4px}
   .byok .d{font-size:11.5px;color:var(--sub);line-height:1.6;margin-bottom:9px}
-  .byok input{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line);
-    background:var(--card);color:var(--ink);font-size:12.5px;font-family:ui-monospace,monospace;outline:none}
+  .byok textarea{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:12.5px;font-family:ui-monospace,monospace;
+    outline:none;resize:vertical;line-height:1.5}
+  .poolbar{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .pstat{flex:1;min-width:88px;background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+  .pstat .n{font-size:19px;font-weight:800;color:var(--purple);line-height:1.2}
+  .pstat .l{font-size:10.5px;color:var(--sub);margin-top:2px}
   .byok .acts{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
   .byok .ok{font-size:11px;color:var(--ok);font-weight:700;margin-left:auto;align-self:center}
 
@@ -122,7 +127,7 @@
     <div class="logo">🚀</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">旗舰模型优先 · 40 个模型 · 免 Key 可用</div>
+      <div class="tagline">♾️ 无限额度池 · 29 个旗舰 · 免 Key 可用</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -135,6 +140,13 @@
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
     <div class="note" style="margin-top:8px">这次不再是小模型专场啦～网关接了三档：<b>① GitHub Models 免费旗舰档</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B / Mistral Large，用你自己的 GitHub 令牌在服务端换的，<b>不用填任何 Key 就能调</b>）；<b>② 免费匿名公益档</b>（Pollinations / Netwrck 的 70B 级）；<b>③ BYOK 高级档</b>（GPT-5 / Claude Sonnet 4.5 / 550B Nemotron，填一个免费注册的 Key 解锁）。免费档永远不校验 Key，不会冒出 401。</div>
+  </div>
+
+  <!-- 无限额度池 -->
+  <div class="card">
+    <div class="step"><span class="num">♾️</span><h2>无限额度池</h2><span class="hint" id="poolHint">读取中…</span></div>
+    <div class="note" style="margin-top:0">每家公益上游都有限额，妹妹把它们全灌进一个池子：<b>全局轮转</b>把请求摊到不同槽位、<b>限流自动跳</b>到下一个、<b>30 秒自动复活</b>、<b>单次请求一路重试到真回话</b>。往下填几个免费 Key，池子还会<b>线性变大</b>。严格意义的「无限」任何 API 都不存在，但这样用起来就是打不完，而且不会拿小模型偷偷冒充你要的旗舰。</div>
+    <div class="poolbar" id="poolBar"></div>
   </div>
 
   <!-- STEP 2 -->
@@ -151,11 +163,10 @@
     </div>
 
     <div class="byok">
-      <div class="t">🔑 高级档 Key（可选，解锁 GPT‑5 / Claude / 550B）</div>
-      <div class="d">去 <b>openrouter.ai</b> 或 <b>api.airforce</b> 免费注册拿一个 Key（不用绑卡），粘进来即可调用标着「🔑 需 Key」的旗舰模型。OpenRouter 还有 <b>:free</b> 免费模型档。不填的话，①② 两档照样能正常用。</div>
-      <input id="byokKey" type="password" placeholder="sk-or-v1-… 或 api.airforce 的 Key（留空也行）" oninput="saveByok()">
+      <div class="t">🔑 免费 Key 池（可选 · 填几个，池子就大几倍）</div>
+      <div class="d">去 <b>openrouter.ai</b> / <b>api.airforce</b> 免费注册拿 Key（不用绑卡），<b>一行填一个</b>。每个 Key 都会和「🔑 需 Key」的旗舰模型组合成独立槽位一起轮转 —— 填 3 个 Key，池子直接多出 36 个槽位，额度摊得更薄。不填的话，上面两档照样能正常用。</div>
+      <textarea id="byokKey" rows="3" placeholder="sk-or-v1-…&#10;sk-or-v1-…&#10;api.airforce 的 Key…（留空也行）" oninput="saveByok()"></textarea>
       <div class="acts">
-        <button class="btn mini ghost" onclick="$('byokKey').type=$('byokKey').type==='password'?'text':'password'">👁 显示/隐藏</button>
         <button class="btn mini ghost" onclick="clearByok()">清空</button>
         <span class="ok" id="byokState"></span>
       </div>
@@ -186,7 +197,7 @@
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div class="note">
-      🚀 <b>旗舰</b> = 70B 以上 / GPT‑4o / Claude / 推理模型，已排在最前面；⚡ <b>标准</b>、🍃 <b>轻量</b> 依次靠后。<b>🟢 已确认</b> = 真发消息回过话；⏳ <b>冷却中</b> = 免费额度临时限流，<b>保留不废除</b>，约 30-45 秒自动恢复；<b>🔑 需 Key</b> = 高级 BYOK 档，填上面的 Key 才能调。真失效(404/需付费)的会永久废除、不出现在列表。
+      🚀 <b>旗舰</b> = 70B 以上 / GPT‑4o / Claude / 推理模型，已排在最前面；⚡ <b>标准</b>、🍃 <b>轻量</b> 依次靠后。<b>🟢 已确认</b> = 真发消息回过话；⏳ <b>冷却中</b> = 免费额度临时限流，<b>保留不废除</b>，约 30-45 秒自动恢复；<b>🔑 需 Key</b> = 高级 BYOK 档，填上面的 Key 才能调。真失效(404/需付费)的会永久废除、不出现在列表。响应头 <b>X-FreeAI-Model</b> 会标明本次实际回话的模型，绝不拿小模型冒充你要的旗舰。
     </div>
   </div>
 
@@ -225,7 +236,18 @@ function cssid(s){return s.replace(/[^a-zA-Z0-9]/g,'_')}
 function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 
 function setStatus(on){$('dot').className='dot '+(on?'on':'off');$('statustext').textContent=on?'在线':'休眠/离线（首次访问需等冷启动 30-50s）'}
-function ping(){fetch(BASE+'/healthz',{mode:'cors',cache:'no-store'}).then(r=>setStatus(r.ok)).catch(()=>setStatus(false))}
+function ping(){
+  fetch(BASE+'/healthz',{mode:'cors',cache:'no-store'})
+    .then(r=>{setStatus(r.ok);return r.json()})
+    .then(d=>{
+      const off=(d.channelsOff||[]).length;
+      $('poolHint').textContent=d.mode==='unlimited-pool'?'轮转运行中':'';
+      $('poolBar').innerHTML=[
+        ['池子槽位',d.poolSlots||0],['🚀 旗舰',d.flagshipSlots||0],
+        ['🟢 已确认',d.confirmed||0],['🔄 轮转指针',d.rr||0],['⏳ 冷却通道',off]
+      ].map(([l,n])=>'<div class="pstat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>').join('');
+    }).catch(()=>setStatus(false));
+}
 
 function genKey(){
   const a=new Uint8Array(16); crypto.getRandomValues(a);
@@ -239,12 +261,20 @@ function updateKey(){
   else box.classList.remove('show');
   $('keyCount').textContent=CUR?'普通 Key 已生成':'都没填也能用';
 }
-function saveByok(){BYOK=$('byokKey').value.trim();localStorage.setItem('gw4_byok',BYOK);updateByok();updateKey();render()}
-function clearByok(){BYOK='';$('byokKey').value='';localStorage.removeItem('gw4_byok');updateByok();updateKey();render();toast('已清空高级档 Key，免费档照常用')}
+function byokCount(){return BYOK?BYOK.split(',').filter(Boolean).length:0}
+function saveByok(){
+  BYOK=$('byokKey').value.split(/[\r\n,;]+/).map(s=>s.trim()).filter(Boolean).join(',');
+  localStorage.setItem('gw4_byok',BYOK);updateKey();render();
+  const n=byokCount();
+  $('byokState').textContent=n?('✅ '+n+' 个 Key 已入池 · +'+(n*12)+' 槽位'):'';
+  $('byokState').style.color=n?'var(--ok)':'';
+}
+function clearByok(){BYOK='';$('byokKey').value='';localStorage.removeItem('gw4_byok');updateByok();updateKey();render();toast('已清空 Key 池，免费档照常用')}
 function updateByok(){
-  $('byokKey').value=BYOK;
-  $('byokState').textContent=BYOK?'✅ 已启用，🔑 旗舰可调用':'';
-  $('byokState').style.color=BYOK?'var(--ok)':'';
+  $('byokKey').value=BYOK?BYOK.split(',').join('\n'):'';
+  const n=byokCount();
+  $('byokState').textContent=n?('✅ '+n+' 个 Key 已入池 · +'+(n*12)+' 槽位'):'';
+  $('byokState').style.color=n?'var(--ok)':'';
   $('flagBtn').classList.toggle('on',ONLY_FLAG);
 }
 function configText(){
@@ -255,7 +285,7 @@ function configText(){
     'API Key  : '+(CUR||'可留空 / 任意值，本网关不校验'),
     'Model    : '+model+(m&&m.label?'  ('+m.label+')':''),
   ];
-  if(m&&m.needs_key) lines.push('X-Upstream-Key : '+(BYOK||'⚠️ 需填高级档 Key（免费注册，无需绑卡）'));
+  if(m&&m.needs_key) lines.push('X-Upstream-Key : '+(BYOK||'⚠️ 需填免费 Key（可逗号分隔多个，自动轮转）'));
   lines.push('');
   lines.push('curl '+BASE+'/v1/chat/completions \\');
   lines.push('  -H "Content-Type: application/json" \\');
@@ -359,7 +389,16 @@ function extraHeaders(){
   return h;
 }
 async function callModel(model){
-  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),45000);
+  // 遇到整池临时限流，前端也自动续杯重试 2 次（服务端本身已全池遍历过一轮）
+  for(let i=0;i<3;i++){
+    const st=await callModelOnce(model);
+    if(st!=='cooldown')return st;
+    await new Promise(r=>setTimeout(r,1800));
+  }
+  return 'cooldown';
+}
+async function callModelOnce(model){
+  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),90000);
   try{
     const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
       headers:extraHeaders(),
