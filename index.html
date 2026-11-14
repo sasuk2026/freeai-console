@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>我的 AI 网关 · 极简控制台</title>
+<title>我的 AI 网关 · 旗舰模型控制台</title>
 <style>
   :root{
     --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --sub:#6b7280; --line:#e8eaed;
     --brand:#ff7a45; --brand2:#ff9a5a; --ok:#16a34a; --bad:#dc2626; --warn:#d97706;
-    --chip:#f1f3f5; --chipon:#fff1e9; --radius:16px; --shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
+    --purple:#7c3aed; --chip:#f1f3f5; --chipon:#fff1e9; --radius:16px;
+    --shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
   }
   @media (prefers-color-scheme:dark){
     :root{--bg:#0f1115;--card:#191c22;--ink:#eef0f3;--sub:#9aa1ab;--line:#292e37;
@@ -20,7 +21,7 @@
     padding:env(safe-area-inset-top) 14px calc(env(safe-area-inset-bottom) + 40px);}
   .wrap{max-width:660px;margin:0 auto}
   header{display:flex;align-items:center;gap:10px;padding:20px 4px 6px}
-  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--purple));
     display:grid;place-items:center;font-size:20px;box-shadow:var(--shadow);flex:0 0 auto}
   h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.3px}
   .tagline{color:var(--sub);font-size:12.5px;margin-top:1px}
@@ -50,6 +51,7 @@
   .btn.mini{padding:6px 10px;font-size:12px;border-radius:8px}
   .btn.full{width:100%;padding:13px;font-size:15px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.on{background:var(--purple);color:#fff;border-color:transparent}
   .iconbtn{background:var(--chip);border:1px solid var(--line);color:var(--ink);
     width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:0 0 auto}
 
@@ -59,6 +61,15 @@
   .keybox.show{display:block}
   .keybox .kv{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;
     font-weight:600;word-break:break-all;color:var(--ink);margin:4px 0 10px}
+  .byok{margin-top:12px;background:linear-gradient(135deg,#f5f0ff,#ede4ff);
+    border:1px dashed #b79ae8;border-radius:12px;padding:13px}
+  @media (prefers-color-scheme:dark){.byok{background:linear-gradient(135deg,#241b38,#2e2247);border-color:#5b4488}}
+  .byok .t{font-size:12.5px;font-weight:700;color:var(--purple);margin-bottom:4px}
+  .byok .d{font-size:11.5px;color:var(--sub);line-height:1.6;margin-bottom:9px}
+  .byok input{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:12.5px;font-family:ui-monospace,monospace;outline:none}
+  .byok .acts{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+  .byok .ok{font-size:11px;color:var(--ok);font-weight:700;margin-left:auto;align-self:center}
 
   .search{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line);
     background:var(--chip);color:var(--ink);font-size:14px;outline:none}
@@ -67,21 +78,28 @@
   .toolbar select{padding:8px 10px;border-radius:9px;border:1px solid var(--line);
     background:var(--chip);color:var(--ink);font-size:12.5px}
 
-  .list{margin-top:6px;max-height:460px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .list{margin-top:6px;max-height:560px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .group{font-size:11px;font-weight:800;color:var(--purple);letter-spacing:.6px;
+    padding:12px 2px 5px;border-top:1px solid var(--line);margin-top:6px}
+  .group:first-child{border-top:0;margin-top:0}
   .m{display:flex;gap:10px;align-items:flex-start;padding:11px 2px;border-top:1px solid var(--line)}
   .m:first-child{border-top:0}
   .m .info{flex:1;min-width:0}
-  .m .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
-    font-weight:600;word-break:break-all}
-  .m .meta{font-size:11px;color:var(--sub);margin-top:3px;display:flex;flex-wrap:wrap;gap:5px 9px}
+  .m .name{font-size:13.5px;font-weight:700;word-break:break-all}
+  .m .id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    color:var(--sub);word-break:break-all;margin-top:1px}
+  .m .meta{font-size:11px;color:var(--sub);margin-top:4px;display:flex;flex-wrap:wrap;gap:5px 9px}
   .badge{font-size:10px;padding:1px 6px;border-radius:5px;background:var(--chip);color:var(--sub)}
+  .badge.flag{background:rgba(124,58,237,.13);color:var(--purple);font-weight:700}
   .badge.cap{background:var(--chipon);color:var(--brand)}
+  .badge.key{background:rgba(217,119,6,.14);color:var(--warn);font-weight:700}
   .m .acts{display:flex;flex-direction:column;gap:5px;flex:0 0 auto}
   .state{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
   .state.ok{background:rgba(22,163,74,.13);color:var(--ok)}
   .state.bad{background:rgba(220,38,38,.12);color:var(--bad)}
   .state.testing{background:rgba(217,119,6,.14);color:var(--warn)}
   .state.cool{background:rgba(217,119,6,.12);color:var(--warn)}
+  .state.key{background:rgba(124,58,237,.12);color:var(--purple)}
   .count{font-size:12px;color:var(--sub);margin:2px 0 8px}
 
   .config{margin-top:12px;background:var(--chip);border:1px solid var(--line);border-radius:11px;
@@ -101,10 +119,10 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="logo">⚡</div>
+    <div class="logo">🚀</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">融合 4 家公益免费 API · 20+ 可用模型</div>
+      <div class="tagline">旗舰模型优先 · 40 个模型 · 免 Key 可用</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -116,14 +134,14 @@
       <div class="field" style="flex:2"><div class="k">Base URL（OpenAI 兼容）</div><div class="v" id="baseText"></div></div>
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
-    <div class="note" style="margin-top:8px">网关已<b>融合多家公益免费 API</b>（Pollinations × 2 端点 + Netwrck × 2 端点），统一成一个 OpenAI 兼容端点，共 <b>26 个模型</b>。<b>调用不再强制 API Key</b>——不带 Key、填任意值都能用（就是修复了那个 401）。一条通道限流会自动绕到另一家。</div>
+    <div class="note" style="margin-top:8px">这次不再是小模型专场啦～网关接了三档：<b>① GitHub Models 免费旗舰档</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B / Mistral Large，用你自己的 GitHub 令牌在服务端换的，<b>不用填任何 Key 就能调</b>）；<b>② 免费匿名公益档</b>（Pollinations / Netwrck 的 70B 级）；<b>③ BYOK 高级档</b>（GPT-5 / Claude Sonnet 4.5 / 550B Nemotron，填一个免费注册的 Key 解锁）。免费档永远不校验 Key，不会冒出 401。</div>
   </div>
 
   <!-- STEP 2 -->
   <div class="card">
-    <div class="step"><span class="num">2</span><h2>创建 API Key</h2><span class="hint" id="keyCount"></span></div>
-    <div class="note" style="margin-top:0;margin-bottom:10px">本网关<b>不校验 Key</b>，这一步只是给需要填 Key 的客户端一个能填的值；直接拿上面的 Base URL 调用也完全没问题。</div>
-    <button class="btn full" id="newKeyBtn" onclick="newKey()">＋ 生成一个新的 API Key（可选）</button>
+    <div class="step"><span class="num">2</span><h2>Key（都可以不填）</h2><span class="hint" id="keyCount"></span></div>
+    <div class="note" style="margin-top:0;margin-bottom:10px">网关<b>不校验 Key</b>。下面第一块只是给需要填 Key 的客户端一个值；第二块是<b>可选的</b>，填了才能解锁第 ③ 档旗舰模型。</div>
+    <button class="btn full" id="newKeyBtn" onclick="newKey()">＋ 生成一个普通 API Key（可选）</button>
     <div class="keybox" id="keybox">
       <div class="k" style="font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">你的 API Key（可填任意值）</div>
       <div class="kv" id="keyVal"></div>
@@ -131,8 +149,20 @@
       <button class="btn mini ghost" onclick="cp(configText(),'已复制完整配置')">⧉ 复制配置</button>
       <div class="config" id="configBox"></div>
     </div>
+
+    <div class="byok">
+      <div class="t">🔑 高级档 Key（可选，解锁 GPT‑5 / Claude / 550B）</div>
+      <div class="d">去 <b>openrouter.ai</b> 或 <b>api.airforce</b> 免费注册拿一个 Key（不用绑卡），粘进来即可调用标着「🔑 需 Key」的旗舰模型。OpenRouter 还有 <b>:free</b> 免费模型档。不填的话，①② 两档照样能正常用。</div>
+      <input id="byokKey" type="password" placeholder="sk-or-v1-… 或 api.airforce 的 Key（留空也行）" oninput="saveByok()">
+      <div class="acts">
+        <button class="btn mini ghost" onclick="$('byokKey').type=$('byokKey').type==='password'?'text':'password'">👁 显示/隐藏</button>
+        <button class="btn mini ghost" onclick="clearByok()">清空</button>
+        <span class="ok" id="byokState"></span>
+      </div>
+    </div>
+
     <details>
-      <summary>手动填入你自己的 Key / 修改网关地址</summary>
+      <summary>手动填入普通 Key / 修改网关地址</summary>
       <div class="row" style="margin-top:8px">
         <input class="search" id="manualKey" placeholder="粘贴你已有的 API Key（可选）">
       </div>
@@ -146,16 +176,17 @@
   <!-- STEP 3 -->
   <div class="card">
     <div class="step"><span class="num">3</span><h2>能用的模型</h2><span class="hint" id="modelTotal"></span></div>
-    <input class="search" id="q" placeholder="🔍 搜模型名，如 gpt / llama / mistral" oninput="render()">
+    <input class="search" id="q" placeholder="🔍 搜中文名或模型 ID，如 GPT / Claude / 405B" oninput="render()">
     <div class="toolbar">
       <select id="owner" onchange="render()"><option value="">全部来源</option></select>
-      <button class="btn mini" id="refreshBtn" onclick="refreshModels(true)">↻ 重新体检并刷新</button>
+      <button class="btn mini" id="flagBtn" onclick="toggleFlag()">🚀 只看旗舰</button>
+      <button class="btn mini ghost" id="refreshBtn" onclick="refreshModels(true)">↻ 重新体检并刷新</button>
       <button class="btn mini ghost" onclick="probeAll()">🔍 逐个实测</button>
     </div>
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div class="note">
-      🟢 <b>已确认</b> = 网关真发消息回过话；⏳ <b>冷却中</b> = 免费额度临时限流，<b>保留不废除</b>，约 30-45 秒自动恢复。<b>来源</b>列标明它属于哪家公益通道。真失效(404/需付费)的会被永久废除、不出现在列表。点「逐个实测」会再真调一次，回不来的当场废除。
+      🚀 <b>旗舰</b> = 70B 以上 / GPT‑4o / Claude / 推理模型，已排在最前面；⚡ <b>标准</b>、🍃 <b>轻量</b> 依次靠后。<b>🟢 已确认</b> = 真发消息回过话；⏳ <b>冷却中</b> = 免费额度临时限流，<b>保留不废除</b>，约 30-45 秒自动恢复；<b>🔑 需 Key</b> = 高级 BYOK 档，填上面的 Key 才能调。真失效(404/需付费)的会永久废除、不出现在列表。
     </div>
   </div>
 
@@ -167,14 +198,16 @@
 
 <script>
 const BASE = "https://freeai-proxy.onrender.com";
-let CUR = localStorage.getItem('gw3_cur') || '';
+let CUR = localStorage.getItem('gw4_cur') || '';
+let BYOK = localStorage.getItem('gw4_byok') || '';
 let MODELS = [];
 let TESTS = {};
-let DROPPED = JSON.parse(localStorage.getItem('gw3_dropped') || '[]');
-let DEFAULT_MODEL = localStorage.getItem('gw3_model') || '';
+let DROPPED = JSON.parse(localStorage.getItem('gw4_dropped') || '[]');
+let DEFAULT_MODEL = localStorage.getItem('gw4_model') || '';
+let ONLY_FLAG = false;
 
 function $(id){return document.getElementById(id)}
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2100)}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400)}
 function cp(text,msg){
   const done=()=>toast(msg||'已复制');
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text,done))}
@@ -182,10 +215,10 @@ function cp(text,msg){
 }
 function fallback(text,cb){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity=0;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb()}catch(e){toast('复制失败，请长按选中')}document.body.removeChild(ta)}
 function save(){
-  localStorage.setItem('gw3_cur',CUR);
-  localStorage.setItem('gw3_tests',JSON.stringify(TESTS));
-  localStorage.setItem('gw3_dropped',JSON.stringify(DROPPED));
-  localStorage.setItem('gw3_model',DEFAULT_MODEL);
+  localStorage.setItem('gw4_cur',CUR);
+  localStorage.setItem('gw4_tests',JSON.stringify(TESTS));
+  localStorage.setItem('gw4_dropped',JSON.stringify(DROPPED));
+  localStorage.setItem('gw4_model',DEFAULT_MODEL);
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function cssid(s){return s.replace(/[^a-zA-Z0-9]/g,'_')}
@@ -204,19 +237,31 @@ function updateKey(){
   const box=$('keybox');
   if(CUR){box.classList.add('show');$('keyVal').textContent=CUR;$('configBox').textContent=configText();$('manualKey').value=CUR}
   else box.classList.remove('show');
-  $('keyCount').textContent=CUR?'已生成（可选）':'可选';
+  $('keyCount').textContent=CUR?'普通 Key 已生成':'都没填也能用';
+}
+function saveByok(){BYOK=$('byokKey').value.trim();localStorage.setItem('gw4_byok',BYOK);updateByok();updateKey();render()}
+function clearByok(){BYOK='';$('byokKey').value='';localStorage.removeItem('gw4_byok');updateByok();updateKey();render();toast('已清空高级档 Key，免费档照常用')}
+function updateByok(){
+  $('byokKey').value=BYOK;
+  $('byokState').textContent=BYOK?'✅ 已启用，🔑 旗舰可调用':'';
+  $('byokState').style.color=BYOK?'var(--ok)':'';
+  $('flagBtn').classList.toggle('on',ONLY_FLAG);
 }
 function configText(){
   const model=DEFAULT_MODEL||MODELS[0]?.id||'MODEL';
-  return [
+  const m=MODELS.find(x=>x.id===model);
+  const lines=[
     'Base URL : '+BASE+'/v1',
     'API Key  : '+(CUR||'可留空 / 任意值，本网关不校验'),
-    'Model    : '+model,
-    '',
-    'curl '+BASE+'/v1/chat/completions \\',
-    '  -H "Content-Type: application/json" \\',
-    '  -d \'{"model":"'+model+'","messages":[{"role":"user","content":"你好"}]}\''
-  ].join('\n');
+    'Model    : '+model+(m&&m.label?'  ('+m.label+')':''),
+  ];
+  if(m&&m.needs_key) lines.push('X-Upstream-Key : '+(BYOK||'⚠️ 需填高级档 Key（免费注册，无需绑卡）'));
+  lines.push('');
+  lines.push('curl '+BASE+'/v1/chat/completions \\');
+  lines.push('  -H "Content-Type: application/json" \\');
+  if(m&&m.needs_key&&BYOK) lines.push('  -H "X-Upstream-Key: '+BYOK+'" \\');
+  lines.push('  -d \'{"model":"'+model+'","messages":[{"role":"user","content":"你好"}]}\'');
+  return lines.join('\n');
 }
 function saveManual(){
   const k=$('manualKey').value.trim();
@@ -233,13 +278,16 @@ async function refreshModels(doTest){
     clearTimeout(to);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
-    MODELS=(d.data||[]).map(x=>({id:x.id,o:x.owned_by||'',ctx:x.context_length||0,c:x.capabilities||{},st:x.status||'cooling'}));
-    TESTS=JSON.parse(localStorage.getItem('gw3_tests')||'{}');
-    DROPPED=JSON.parse(localStorage.getItem('gw3_dropped')||'[]');
+    MODELS=(d.data||[]).map(x=>({id:x.id,o:x.owned_by||'',ctx:x.context_length||0,c:x.capabilities||{},
+      st:x.status||'cooling',tier:x.tier||'pro',label:x.display_name||x.id,params:x.params||'',
+      needs_key:!!x.needs_key,up:x.upstream||''}));
+    TESTS=JSON.parse(localStorage.getItem('gw4_tests')||'{}');
+    DROPPED=JSON.parse(localStorage.getItem('gw4_dropped')||'[]');
     if(!DEFAULT_MODEL||!MODELS.some(m=>m.id===DEFAULT_MODEL))DEFAULT_MODEL=MODELS[0]?.id||'';
-    save();initOwner();render();updateKey();
+    save();initOwner();render();updateKey();updateByok();
     const ready=MODELS.filter(m=>m.st==='ready').length;
-    toast(MODELS.length?('加载完成：'+MODELS.length+' 个模型（'+ready+' 个已确认回话）'):'当前 0 个模型，稍后再试');
+    const flag=MODELS.filter(m=>m.tier==='flagship').length;
+    toast(MODELS.length?('加载完成：'+MODELS.length+' 个模型 · 🚀旗舰 '+flag+' 个 · 🟢已确认 '+ready+' 个'):'当前 0 个模型，稍后再试');
   }catch(e){
     $('list').innerHTML='<div class="empty">拉取失败（网关可能正在冷启动）。<br>稍等半分钟点「重新体检并刷新」再试。<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div>';
   }finally{btn.disabled=false;btn.textContent='↻ 重新体检并刷新'}
@@ -248,53 +296,77 @@ function initOwner(){
   const owners=[...new Set(MODELS.map(m=>m.o))].sort();
   $('owner').innerHTML='<option value="">全部来源</option>'+owners.map(o=>'<option value="'+esc(o)+'">'+esc(o)+' ('+MODELS.filter(m=>m.o===o).length+')</option>').join('');
 }
+function tierRank(t){return t==='flagship'?0:t==='pro'?1:2}
+function toggleFlag(){ONLY_FLAG=!ONLY_FLAG;render();toast(ONLY_FLAG?'已筛选：只看 🚀 旗舰模型':'已显示全部模型')}
 function visible(){
   const q=$('q').value.trim().toLowerCase(),ow=$('owner').value;
   return MODELS.filter(m=>{
     if(DROPPED.includes(m.id))return false;
-    if(q&&!m.id.toLowerCase().includes(q))return false;
+    if(ONLY_FLAG&&m.tier!=='flagship')return false;
+    if(q&&!(m.id+' '+m.label+' '+m.params+' '+m.up).toLowerCase().includes(q))return false;
     if(ow&&m.o!==ow)return false;
     return true;
-  });
+  }).sort((a,b)=>tierRank(a.tier)-tierRank(b.tier)||(a.st==='ready'?0:1)-(b.st==='ready'?0:1));
 }
 function render(){
   const arr=visible();
   const ready=arr.filter(m=>m.st==='ready'||TESTS[m.id]==='ok').length;
-  const cool=arr.filter(m=>m.st!=='ready'&&TESTS[m.id]!=='ok').length;
-  $('count').textContent='显示 '+arr.length+' 个 · 🟢已确认 '+ready+' · ⏳冷却 '+cool+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
+  const flag=arr.filter(m=>m.tier==='flagship').length;
+  const needkey=arr.filter(m=>m.needs_key).length;
+  $('count').textContent='显示 '+arr.length+' 个 · 🚀旗舰 '+flag+' · 🟢已确认 '+ready+' · 🔑需Key '+needkey+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
   $('modelTotal').textContent=arr.length+' 个';
-  $('list').innerHTML=arr.map(m=>{
+  $('flagBtn').classList.toggle('on',ONLY_FLAG);
+  let html='',lastTier='';
+  const names={flagship:'🚀 旗舰模型（70B+ / GPT‑4o / Claude / 推理）',pro:'⚡ 标准模型',light:'🍃 轻量模型'};
+  arr.forEach(m=>{
+    if(m.tier!==lastTier){lastTier=m.tier;html+='<div class="group">'+names[m.tier]+'</div>'}
     const t=TESTS[m.id];
     let badge;
     if(t==='ok')badge='<span class="state ok">🟢 已复测</span>';
     else if(t==='bad')badge='<span class="state bad">🔴 待废除</span>';
     else if(t==='cool')badge='<span class="state cool">⏳ 冷却中</span>';
+    else if(m.st==='needs_key')badge='<span class="state key">🔑 需 Key</span>';
     else if(m.st==='ready')badge='<span class="state ok">🟢 已确认</span>';
     else badge='<span class="state cool">⏳ 冷却中</span>';
     const isDef=m.id===DEFAULT_MODEL?'<span class="badge cap">默认</span>':'';
-    const caps=Object.entries(m.c||{}).filter(([k,v])=>v).slice(0,2).map(([k])=>'<span class="badge cap">'+esc(k)+'</span>').join('');
-    return '<div class="m" id="m_'+cssid(m.id)+'">'
-      +'<div class="info"><div class="name">'+esc(m.id)+'</div>'
-      +'<div class="meta"><span>'+esc(m.o)+'</span>'+(m.ctx?'<span>ctx '+Math.round(m.ctx/1000)+'K</span>':'')+caps+isDef+'</div></div>'
+    const tierB=m.tier==='flagship'?'<span class="badge flag">🚀 旗舰</span>':'';
+    const keyB=m.needs_key?'<span class="badge key">🔑 需 Key</span>':'';
+    html+='<div class="m" id="m_'+cssid(m.id)+'">'
+      +'<div class="info"><div class="name">'+esc(m.label)+'</div>'
+      +'<div class="id">'+esc(m.id)+'</div>'
+      +'<div class="meta">'+tierB+keyB+(m.params?'<span>'+esc(m.params)+'</span>':'')
+      +(m.ctx?'<span>ctx '+Math.round(m.ctx/1000)+'K</span>':'')+'<span>'+esc(m.o)+'</span>'+isDef+'</div></div>'
       +'<div class="acts" id="a_'+cssid(m.id)+'">'+badge
       +'<button class="btn mini ghost" onclick="testOne(\''+jsq(m.id)+'\')">测一下</button>'
       +'<button class="btn mini" onclick="setDefault(\''+jsq(m.id)+'\')">用这个</button></div></div>';
-  }).join('')||'<div class="empty">当前没有模型。点「重新体检并刷新」再试。</div>';
+  });
+  $('list').innerHTML=html||'<div class="empty">当前没有模型。点「重新体检并刷新」再试。</div>';
 }
-function setDefault(id){DEFAULT_MODEL=id;save();updateKey();render();cp(id,'已设为默认模型：'+id)}
+function setDefault(id){
+  DEFAULT_MODEL=id;save();updateKey();render();
+  const m=MODELS.find(x=>x.id===id);
+  if(m&&m.needs_key&&!BYOK){toast('⚠️ 这是 🔑 高级档模型，请先在上面填入免费 Key，否则调用会提示需要 Key')}
+  else cp(id,'已设为默认模型：'+(m?m.label:id));
+}
 function dropModel(id){
   if(!DROPPED.includes(id))DROPPED.push(id);
   save();render();
   toast('已废除并从调用列表移除：'+id);
 }
+function extraHeaders(){
+  const h={'Content-Type':'application/json'};
+  if(BYOK)h['X-Upstream-Key']=BYOK;
+  return h;
+}
 async function callModel(model){
-  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),40000);
+  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),45000);
   try{
     const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
-      headers:{'Content-Type':'application/json'},
+      headers:extraHeaders(),
       body:JSON.stringify({model,messages:[{role:'user',content:'hi'}],max_tokens:16,stream:false})});
     clearTimeout(to);
     if(r.status===429)return 'cooldown';
+    if(r.status===402)return 'needskey';
     if(!r.ok)return 'dead';
     const d=await r.json();
     const c=d&&d.choices&&d.choices[0]&&(d.choices[0].message||{}).content;
@@ -302,15 +374,18 @@ async function callModel(model){
   }catch(e){clearTimeout(to);return 'cooldown'}
 }
 async function testOne(id){
+  const m=MODELS.find(x=>x.id===id);
+  if(m&&m.needs_key&&!BYOK){toast('🔑 这是高级档模型，先在上面填一个免费 Key 再测');return false}
   const a=$('a_'+cssid(id));if(a)a.innerHTML='<span class="state testing">测试中</span>';
   const st=await callModel(id);
   if(st==='ok'){TESTS[id]='ok';save();render();toast('🟢 '+id+' 真的回话了')}
+  else if(st==='needskey'){TESTS[id]='cool';save();render();toast('🔑 需要先填高级档免费 Key')}
   else if(st==='cooldown'){TESTS[id]='cool';save();render();toast('⏳ 免费额度冷却中，约 30-45 秒后自动恢复（未废除）')}
   else{TESTS[id]='bad';save();dropModel(id);}
   return st==='ok';
 }
 async function probeAll(){
-  const ids=visible().map(m=>m.id);
+  const ids=visible().filter(m=>!m.needs_key||BYOK).map(m=>m.id);
   if(!ids.length){toast('列表是空的，先重新体检');return}
   toast('逐个实测 '+ids.length+' 个，失败的会当场废除…');
   const q=ids.slice();let okn=0,badn=0,cool=0;
@@ -320,19 +395,19 @@ async function probeAll(){
       const a=$('a_'+cssid(id));if(a)a.innerHTML='<span class="state testing">测试中</span>';
       const st=await callModel(id);
       if(st==='ok'){okn++;TESTS[id]='ok'}
-      else if(st==='cooldown'){cool++;TESTS[id]='cool';q.length=0;}
+      else if(st==='cooldown'||st==='needskey'){cool++;TESTS[id]='cool';q.length=0;}
       else{badn++;TESTS[id]='bad';if(!DROPPED.includes(id))DROPPED.push(id);}
       save();render();
       await new Promise(r=>setTimeout(r,600));
     }
   };
   await worker();
-  toast(cool?('遇到免费额度冷却，已停止测试（未废除任何模型），约 30-45 秒后再试'):('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除'));
+  toast(cool?('遇到免费额度冷却/需 Key，已停止测试（未废除任何模型）'):('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除'));
 }
 
 $('baseText').textContent=BASE+'/v1';
 $('manualBase').value=BASE+'/v1';
-updateKey();ping();refreshModels(false);
+updateKey();updateByok();ping();refreshModels(false);
 </script>
 </body>
 </html>
