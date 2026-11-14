@@ -67,7 +67,7 @@
   .toolbar select{padding:8px 10px;border-radius:9px;border:1px solid var(--line);
     background:var(--chip);color:var(--ink);font-size:12.5px}
 
-  .list{margin-top:6px;max-height:440px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .list{margin-top:6px;max-height:460px;overflow:auto;-webkit-overflow-scrolling:touch}
   .m{display:flex;gap:10px;align-items:flex-start;padding:11px 2px;border-top:1px solid var(--line)}
   .m:first-child{border-top:0}
   .m .info{flex:1;min-width:0}
@@ -81,6 +81,7 @@
   .state.ok{background:rgba(22,163,74,.13);color:var(--ok)}
   .state.bad{background:rgba(220,38,38,.12);color:var(--bad)}
   .state.testing{background:rgba(217,119,6,.14);color:var(--warn)}
+  .state.cool{background:rgba(217,119,6,.12);color:var(--warn)}
   .count{font-size:12px;color:var(--sub);margin:2px 0 8px}
 
   .config{margin-top:12px;background:var(--chip);border:1px solid var(--line);border-radius:11px;
@@ -103,7 +104,7 @@
     <div class="logo">⚡</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">融合多家公益免费 API · 只留能用的模型</div>
+      <div class="tagline">融合 4 家公益免费 API · 20+ 可用模型</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -115,15 +116,16 @@
       <div class="field" style="flex:2"><div class="k">Base URL（OpenAI 兼容）</div><div class="v" id="baseText"></div></div>
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
-    <div class="note" style="margin-top:8px">网关已<b>融合多家公益免费 API</b>（Pollinations + Netwrck 等），统一成一个 OpenAI 兼容端点。<b>只把实测能回话的模型放进列表</b>，调不通的当场废除；一条通道限流会自动绕到另一家。</div>
+    <div class="note" style="margin-top:8px">网关已<b>融合多家公益免费 API</b>（Pollinations × 2 端点 + Netwrck × 2 端点），统一成一个 OpenAI 兼容端点，共 <b>26 个模型</b>。<b>调用不再强制 API Key</b>——不带 Key、填任意值都能用（就是修复了那个 401）。一条通道限流会自动绕到另一家。</div>
   </div>
 
   <!-- STEP 2 -->
   <div class="card">
     <div class="step"><span class="num">2</span><h2>创建 API Key</h2><span class="hint" id="keyCount"></span></div>
-    <button class="btn full" id="newKeyBtn" onclick="newKey()">＋ 生成一个新的 API Key</button>
+    <div class="note" style="margin-top:0;margin-bottom:10px">本网关<b>不校验 Key</b>，这一步只是给需要填 Key 的客户端一个能填的值；直接拿上面的 Base URL 调用也完全没问题。</div>
+    <button class="btn full" id="newKeyBtn" onclick="newKey()">＋ 生成一个新的 API Key（可选）</button>
     <div class="keybox" id="keybox">
-      <div class="k" style="font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">你的 API Key</div>
+      <div class="k" style="font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">你的 API Key（可填任意值）</div>
       <div class="kv" id="keyVal"></div>
       <button class="btn mini" onclick="cp(CUR,'已复制 API Key')">⧉ 复制 Key</button>
       <button class="btn mini ghost" onclick="cp(configText(),'已复制完整配置')">⧉ 复制配置</button>
@@ -153,23 +155,23 @@
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div class="note">
-      列表来自网关的<b>实时体检</b>：多家公益 API 逐个真发消息，只有回得来话的才出现，<b>来源</b>列标明它属于哪家免费通道。点「逐个实测」会再真调一次，<b>回不来的当场废除</b>；限流冷却不会误废除，稍等自动恢复。
+      🟢 <b>已确认</b> = 网关真发消息回过话；⏳ <b>冷却中</b> = 免费额度临时限流，<b>保留不废除</b>，约 30-45 秒自动恢复。<b>来源</b>列标明它属于哪家公益通道。真失效(404/需付费)的会被永久废除、不出现在列表。点「逐个实测」会再真调一次，回不来的当场废除。
     </div>
   </div>
 
   <div class="note" style="text-align:center">
-    数据直连你自己的网关 · <b>别把本页公开分享</b>（含你的 Key）
+    数据直连你自己的网关 · 免费额度按 IP 限流，等一会儿会自己恢复
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 const BASE = "https://freeai-proxy.onrender.com";
-let CUR = localStorage.getItem('gw2_cur') || '';
-let MODELS = [];                 // 来自 /v1/models（服务端已筛掉不可用的）
-let TESTS = {};                  // id -> 'ok'|'bad'
-let DROPPED = JSON.parse(localStorage.getItem('gw2_dropped') || '[]'); // 前端废除的模型
-let DEFAULT_MODEL = localStorage.getItem('gw2_model') || '';
+let CUR = localStorage.getItem('gw3_cur') || '';
+let MODELS = [];
+let TESTS = {};
+let DROPPED = JSON.parse(localStorage.getItem('gw3_dropped') || '[]');
+let DEFAULT_MODEL = localStorage.getItem('gw3_model') || '';
 
 function $(id){return document.getElementById(id)}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2100)}
@@ -180,66 +182,64 @@ function cp(text,msg){
 }
 function fallback(text,cb){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity=0;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb()}catch(e){toast('复制失败，请长按选中')}document.body.removeChild(ta)}
 function save(){
-  localStorage.setItem('gw2_cur',CUR);
-  localStorage.setItem('gw2_tests',JSON.stringify(TESTS));
-  localStorage.setItem('gw2_dropped',JSON.stringify(DROPPED));
-  localStorage.setItem('gw2_model',DEFAULT_MODEL);
+  localStorage.setItem('gw3_cur',CUR);
+  localStorage.setItem('gw3_tests',JSON.stringify(TESTS));
+  localStorage.setItem('gw3_dropped',JSON.stringify(DROPPED));
+  localStorage.setItem('gw3_model',DEFAULT_MODEL);
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function cssid(s){return s.replace(/[^a-zA-Z0-9]/g,'_')}
 function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 
-// ---------- status ----------
 function setStatus(on){$('dot').className='dot '+(on?'on':'off');$('statustext').textContent=on?'在线':'休眠/离线（首次访问需等冷启动 30-50s）'}
 function ping(){fetch(BASE+'/healthz',{mode:'cors',cache:'no-store'}).then(r=>setStatus(r.ok)).catch(()=>setStatus(false))}
 
-// ---------- step2 ----------
 function genKey(){
   const a=new Uint8Array(16); crypto.getRandomValues(a);
   const h=Array.from(a).map(x=>x.toString(16).padStart(2,'0')).join('');
   return 'sk-'+h.slice(0,12)+'-'+h.slice(12,20)+'-'+h.slice(20,28);
 }
-function newKey(){
-  CUR=genKey(); save(); updateKey(); cp(CUR,'新 Key 已生成并复制 ✅');
-}
+function newKey(){CUR=genKey();save();updateKey();cp(CUR,'新 Key 已生成并复制 ✅（其实不填也能用）')}
 function updateKey(){
   const box=$('keybox');
   if(CUR){box.classList.add('show');$('keyVal').textContent=CUR;$('configBox').textContent=configText();$('manualKey').value=CUR}
   else box.classList.remove('show');
-  $('keyCount').textContent=CUR?'已生成':'点一下就成';
+  $('keyCount').textContent=CUR?'已生成（可选）':'可选';
 }
 function configText(){
-  return 'Base URL : '+BASE+'/v1\n'
-    +'API Key  : '+(CUR||'（先点上面生成）')+'\n'
-    +'Model    : '+(DEFAULT_MODEL||MODELS[0]?.id||'（体检中）')+'\n\n'
-    +'curl '+BASE+'/v1/chat/completions \\\n'
-    +'  -H "Authorization: Bearer '+(CUR||'YOUR_KEY')+'" \\\n'
-    +'  -H "Content-Type: application/json" \\\n'
-    +'  -d \'{"model":"'+(DEFAULT_MODEL||MODELS[0]?.id||'MODEL')+'","messages":[{"role":"user","content":"你好"}]}\'';
+  const model=DEFAULT_MODEL||MODELS[0]?.id||'MODEL';
+  return [
+    'Base URL : '+BASE+'/v1',
+    'API Key  : '+(CUR||'可留空 / 任意值，本网关不校验'),
+    'Model    : '+model,
+    '',
+    'curl '+BASE+'/v1/chat/completions \\',
+    '  -H "Content-Type: application/json" \\',
+    '  -d \'{"model":"'+model+'","messages":[{"role":"user","content":"你好"}]}\''
+  ].join('\n');
 }
 function saveManual(){
-  const k=$('manualKey').value.trim(); let b=$('manualBase').value.trim().replace(/\/$/,'').replace(/\/v1$/,'');
+  const k=$('manualKey').value.trim();
   if(k)CUR=k;
-  if(b){toast('网关地址需在页面顶部配置里改（当前固定为已部署地址）')}
-  save(); updateKey(); refreshModels(true); toast('已保存');
+  save();updateKey();refreshModels(true);toast('已保存');
 }
 
-// ---------- step3 ----------
 async function refreshModels(doTest){
-  const btn=$('refreshBtn'); btn.disabled=true; btn.textContent='体检中…';
+  const btn=$('refreshBtn');btn.disabled=true;btn.textContent='体检中…';
   $('list').innerHTML='<div class="empty">正在让网关重新体检可用模型…<br>免费实例冷启动可能要等 30–50 秒</div>';
   try{
-    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),90000);
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),90000);
     const r=await fetch(BASE+'/v1/models',{cache:'no-store',signal:ctrl.signal});
     clearTimeout(to);
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
-    MODELS=(d.data||[]).map(x=>({id:x.id,o:x.owned_by||'',ctx:x.context_length||0,c:x.capabilities||{}}));
-    TESTS=JSON.parse(localStorage.getItem('gw2_tests')||'{}');
-    DROPPED=JSON.parse(localStorage.getItem('gw2_dropped')||'[]');
-    if(!DEFAULT_MODEL||!MODELS.some(m=>m.id===DEFAULT_MODEL)) DEFAULT_MODEL=MODELS[0]?.id||'';
-    save(); initOwner(); render(); updateKey();
-    toast(MODELS.length?('体检完成：'+MODELS.length+' 个能用的模型'):'当前 0 个可用模型，稍后再试或点重新体检');
+    MODELS=(d.data||[]).map(x=>({id:x.id,o:x.owned_by||'',ctx:x.context_length||0,c:x.capabilities||{},st:x.status||'cooling'}));
+    TESTS=JSON.parse(localStorage.getItem('gw3_tests')||'{}');
+    DROPPED=JSON.parse(localStorage.getItem('gw3_dropped')||'[]');
+    if(!DEFAULT_MODEL||!MODELS.some(m=>m.id===DEFAULT_MODEL))DEFAULT_MODEL=MODELS[0]?.id||'';
+    save();initOwner();render();updateKey();
+    const ready=MODELS.filter(m=>m.st==='ready').length;
+    toast(MODELS.length?('加载完成：'+MODELS.length+' 个模型（'+ready+' 个已确认回话）'):'当前 0 个模型，稍后再试');
   }catch(e){
     $('list').innerHTML='<div class="empty">拉取失败（网关可能正在冷启动）。<br>稍等半分钟点「重新体检并刷新」再试。<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div>';
   }finally{btn.disabled=false;btn.textContent='↻ 重新体检并刷新'}
@@ -247,12 +247,11 @@ async function refreshModels(doTest){
 function initOwner(){
   const owners=[...new Set(MODELS.map(m=>m.o))].sort();
   $('owner').innerHTML='<option value="">全部来源</option>'+owners.map(o=>'<option value="'+esc(o)+'">'+esc(o)+' ('+MODELS.filter(m=>m.o===o).length+')</option>').join('');
-  $('modelTotal').textContent=MODELS.filter(m=>!DROPPED.includes(m.id)).length+' 个可用';
 }
 function visible(){
-  const q=$('q').value.trim().toLowerCase(), ow=$('owner').value;
+  const q=$('q').value.trim().toLowerCase(),ow=$('owner').value;
   return MODELS.filter(m=>{
-    if(DROPPED.includes(m.id))return false;                 // 废除的不显示
+    if(DROPPED.includes(m.id))return false;
     if(q&&!m.id.toLowerCase().includes(q))return false;
     if(ow&&m.o!==ow)return false;
     return true;
@@ -260,77 +259,80 @@ function visible(){
 }
 function render(){
   const arr=visible();
-  const okc=arr.filter(m=>TESTS[m.id]==='ok').length;
-  $('count').textContent='显示 '+arr.length+' 个'+(okc?' · 已复测可用 '+okc+' 个':'')+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
-  $('modelTotal').textContent=arr.length+' 个可用';
+  const ready=arr.filter(m=>m.st==='ready'||TESTS[m.id]==='ok').length;
+  const cool=arr.filter(m=>m.st!=='ready'&&TESTS[m.id]!=='ok').length;
+  $('count').textContent='显示 '+arr.length+' 个 · 🟢已确认 '+ready+' · ⏳冷却 '+cool+(DROPPED.length?' · 已废除 '+DROPPED.length:'');
+  $('modelTotal').textContent=arr.length+' 个';
   $('list').innerHTML=arr.map(m=>{
-    const st=TESTS[m.id];
-    const badge=st==='ok'?'<span class="state ok">🟢 已复测</span>':st==='bad'?'<span class="state bad">🔴 待废除</span>':'<span class="state ok">🟢 体检通过</span>';
+    const t=TESTS[m.id];
+    let badge;
+    if(t==='ok')badge='<span class="state ok">🟢 已复测</span>';
+    else if(t==='bad')badge='<span class="state bad">🔴 待废除</span>';
+    else if(t==='cool')badge='<span class="state cool">⏳ 冷却中</span>';
+    else if(m.st==='ready')badge='<span class="state ok">🟢 已确认</span>';
+    else badge='<span class="state cool">⏳ 冷却中</span>';
     const isDef=m.id===DEFAULT_MODEL?'<span class="badge cap">默认</span>':'';
-    const caps=Object.entries(m.c||{}).filter(([k,v])=>v).slice(0,3).map(([k])=>'<span class="badge cap">'+esc(k)+'</span>').join('');
+    const caps=Object.entries(m.c||{}).filter(([k,v])=>v).slice(0,2).map(([k])=>'<span class="badge cap">'+esc(k)+'</span>').join('');
     return '<div class="m" id="m_'+cssid(m.id)+'">'
       +'<div class="info"><div class="name">'+esc(m.id)+'</div>'
       +'<div class="meta"><span>'+esc(m.o)+'</span>'+(m.ctx?'<span>ctx '+Math.round(m.ctx/1000)+'K</span>':'')+caps+isDef+'</div></div>'
       +'<div class="acts" id="a_'+cssid(m.id)+'">'+badge
       +'<button class="btn mini ghost" onclick="testOne(\''+jsq(m.id)+'\')">测一下</button>'
       +'<button class="btn mini" onclick="setDefault(\''+jsq(m.id)+'\')">用这个</button></div></div>';
-  }).join('')||'<div class="empty">当前没有可用模型。<br>点「重新体检并刷新」让网关再测一次。</div>';
+  }).join('')||'<div class="empty">当前没有模型。点「重新体检并刷新」再试。</div>';
 }
 function setDefault(id){DEFAULT_MODEL=id;save();updateKey();render();cp(id,'已设为默认模型：'+id)}
 function dropModel(id){
   if(!DROPPED.includes(id))DROPPED.push(id);
-  save(); render();
+  save();render();
   toast('已废除并从调用列表移除：'+id);
 }
 async function callModel(model){
-  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),40000);
+  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),40000);
   try{
     const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',signal:ctrl.signal,
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(CUR||genKey())},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model,messages:[{role:'user',content:'hi'}],max_tokens:16,stream:false})});
     clearTimeout(to);
-    if(r.status===429) return 'cooldown';   // 限流冷却：不废除，稍等自动恢复
-    if(!r.ok) return 'dead';                // 真失效
+    if(r.status===429)return 'cooldown';
+    if(!r.ok)return 'dead';
     const d=await r.json();
     const c=d&&d.choices&&d.choices[0]&&(d.choices[0].message||{}).content;
-    return (c&&String(c).trim())?'ok':'dead';   // 必须真有回话内容
+    return (c&&String(c).trim())?'ok':'dead';
   }catch(e){clearTimeout(to);return 'cooldown'}
 }
 async function testOne(id){
-  const a=$('a_'+cssid(id)); if(a)a.innerHTML='<span class="state testing">测试中</span>';
+  const a=$('a_'+cssid(id));if(a)a.innerHTML='<span class="state testing">测试中</span>';
   const st=await callModel(id);
   if(st==='ok'){TESTS[id]='ok';save();render();toast('🟢 '+id+' 真的回话了')}
-  else if(st==='cooldown'){TESTS[id]='';save();render();toast('⏳ 免费额度冷却中，约 45 秒后自动恢复（未废除）')}
-  else {TESTS[id]='bad';save();dropModel(id);}   // 真回不来 → 当场废除
+  else if(st==='cooldown'){TESTS[id]='cool';save();render();toast('⏳ 免费额度冷却中，约 30-45 秒后自动恢复（未废除）')}
+  else{TESTS[id]='bad';save();dropModel(id);}
   return st==='ok';
 }
 async function probeAll(){
   const ids=visible().map(m=>m.id);
   if(!ids.length){toast('列表是空的，先重新体检');return}
   toast('逐个实测 '+ids.length+' 个，失败的会当场废除…');
-  const q=ids.slice(); let okn=0,badn=0;
-  let cool=0;
-  // 串行、温和：绝不并发狂打，避免把免费额度打到限流
+  const q=ids.slice();let okn=0,badn=0,cool=0;
   const worker=async()=>{
     while(q.length){
       const id=q.shift();
-      const a=$('a_'+cssid(id)); if(a)a.innerHTML='<span class="state testing">测试中</span>';
+      const a=$('a_'+cssid(id));if(a)a.innerHTML='<span class="state testing">测试中</span>';
       const st=await callModel(id);
       if(st==='ok'){okn++;TESTS[id]='ok'}
-      else if(st==='cooldown'){cool++;TESTS[id]='';q.length=0;}  // 遇限流立即停测，别再打
-      else {badn++;TESTS[id]='bad';if(!DROPPED.includes(id))DROPPED.push(id);}
-      save(); render();
+      else if(st==='cooldown'){cool++;TESTS[id]='cool';q.length=0;}
+      else{badn++;TESTS[id]='bad';if(!DROPPED.includes(id))DROPPED.push(id);}
+      save();render();
       await new Promise(r=>setTimeout(r,600));
     }
   };
   await worker();
-  toast(cool?('遇到免费额度冷却，已停止测试（未废除任何模型），约 45 秒后再试'):('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除'));
+  toast(cool?('遇到免费额度冷却，已停止测试（未废除任何模型），约 30-45 秒后再试'):('测完：'+okn+' 个能回话 ✅，'+badn+' 个已废除'));
 }
 
-// ---------- boot ----------
 $('baseText').textContent=BASE+'/v1';
 $('manualBase').value=BASE+'/v1';
-updateKey(); ping(); refreshModels(false);
+updateKey();ping();refreshModels(false);
 </script>
 </body>
 </html>
