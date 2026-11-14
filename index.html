@@ -127,7 +127,7 @@
     <div class="logo">🚀</div>
     <div>
       <h1>我的 AI 网关</h1>
-      <div class="tagline">♾️ 无限额度池 · 29 个旗舰 · 免 Key 可用</div>
+      <div class="tagline">♾️ 7 家渠道 · 60+ 槽位 · 免 Key 可用</div>
     </div>
     <div class="status"><span id="dot" class="dot"></span><span id="statustext">检测中…</span></div>
   </header>
@@ -139,13 +139,13 @@
       <div class="field" style="flex:2"><div class="k">Base URL（OpenAI 兼容）</div><div class="v" id="baseText"></div></div>
       <button class="iconbtn" onclick="cp(BASE+'/v1','已复制 Base URL')" title="复制">⧉</button>
     </div>
-    <div class="note" style="margin-top:8px">这次不再是小模型专场啦～网关接了三档：<b>① GitHub Models 免费旗舰档</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B / Mistral Large，用你自己的 GitHub 令牌在服务端换的，<b>不用填任何 Key 就能调</b>）；<b>② 免费匿名公益档</b>（Pollinations / Netwrck 的 70B 级）；<b>③ BYOK 高级档</b>（GPT-5 / Claude Sonnet 4.5 / 550B Nemotron，填一个免费注册的 Key 解锁）。免费档永远不校验 Key，不会冒出 401。</div>
+    <div class="note" style="margin-top:8px">这次给你铺了 <b>7 家来源渠道</b>：<b>① Cloudflare Workers AI</b>（51 个零凭证大模型 —— GPT-OSS 120B / Llama 3.3 70B / Kimi K2.7 / GLM-5.2 / Nemotron 120B，WebSocket 每请求新建独立会话，实测真回话）；<b>② LLM7.io</b>（DeepSeek V4 / GLM-5.3 等 6 个免 Key 模型）；<b>③ GitHub Models</b>（GPT-4o / o3 / DeepSeek R1 / Llama 405B，用服务端令牌）；<b>④ Pollinations</b>；<b>⑤ Netwrck</b>；<b>⑥ OpenRouter</b> ＋ <b>⑦ api.airforce</b>（这两家填免费 Key 解锁 GPT-5 / Claude）。全部灌进同一个无限额度池轮转，免费档永不校验 Key。</div>
   </div>
 
   <!-- 无限额度池 -->
   <div class="card">
     <div class="step"><span class="num">♾️</span><h2>无限额度池</h2><span class="hint" id="poolHint">读取中…</span></div>
-    <div class="note" style="margin-top:0">每家公益上游都有限额，妹妹把它们全灌进一个池子：<b>全局轮转</b>把请求摊到不同槽位、<b>限流自动跳</b>到下一个、<b>30 秒自动复活</b>、<b>单次请求一路重试到真回话</b>。往下填几个免费 Key，池子还会<b>线性变大</b>。严格意义的「无限」任何 API 都不存在，但这样用起来就是打不完，而且不会拿小模型偷偷冒充你要的旗舰。</div>
+    <div class="note" style="margin-top:0">7 家渠道各有各的额度，妹妹把它们全灌进一个池子：<b>全局轮转</b>把请求摊到不同槽位、<b>限流自动跳</b>到下一个、<b>30 秒自动复活</b>、<b>单次请求一路重试到真回话</b>。往下填几个免费 Key，池子还会<b>线性变大</b>。严格意义的「无限」任何 API 都不存在，但这样用起来就是打不完，而且不会拿小模型偷偷冒充你要的旗舰。</div>
     <div class="poolbar" id="poolBar"></div>
   </div>
 
